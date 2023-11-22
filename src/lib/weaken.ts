@@ -3,10 +3,7 @@ import { validateScriptInput } from "/lib/utilities";
 const argsTemplate = {
   host: "n00dles",
 };
-const flagsTemplate = {
-  //depth
-  d: 10,
-};
+const flagsTemplate = {};
 
 export async function main(ns: NS): Promise<void> {
   const validationReport = validateScriptInput(ns, flagsTemplate, argsTemplate);
@@ -16,13 +13,18 @@ export async function main(ns: NS): Promise<void> {
 
   const { args, flags } = validationReport;
 
-  await template(ns, args, flags);
+  const host: string = args.host;
+
+  await weaken(ns, host);
 }
 
-export async function template(
-  ns: NS,
-  { host }: typeof argsTemplate,
-  { d: depth }: typeof flagsTemplate
-) {
-  console.log("template");
+export async function weaken(ns: NS, host: string) {
+  while (true) {
+    if (ns.getServerSecurityLevel(host) > ns.getServerMinSecurityLevel(host)) {
+      await ns.weaken(host);
+    } else {
+      ns.toast("weaken done " + host, "info");
+      ns.exit();
+    }
+  }
 }

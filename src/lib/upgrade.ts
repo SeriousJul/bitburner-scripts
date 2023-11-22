@@ -3,10 +3,7 @@ import { validateScriptInput } from "/lib/utilities";
 const argsTemplate = {
   host: "n00dles",
 };
-const flagsTemplate = {
-  //depth
-  d: 10,
-};
+const flagsTemplate = {};
 
 export async function main(ns: NS): Promise<void> {
   const validationReport = validateScriptInput(ns, flagsTemplate, argsTemplate);
@@ -16,13 +13,17 @@ export async function main(ns: NS): Promise<void> {
 
   const { args, flags } = validationReport;
 
-  await template(ns, args, flags);
+  await upgrade(ns, args, flags);
 }
 
-export async function template(
+export async function upgrade(
   ns: NS,
   { host }: typeof argsTemplate,
-  { d: depth }: typeof flagsTemplate
+  {}: typeof flagsTemplate
 ) {
-  console.log("template");
+  const ram = ns.getServerMaxRam(host);
+  const newRam = ram * 2;
+  if (ns.upgradePurchasedServer(host, newRam)) {
+    ns.tprintf("Upgrading %s with %sGB", host, newRam);
+  }
 }

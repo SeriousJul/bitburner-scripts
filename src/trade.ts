@@ -16,13 +16,19 @@ export async function main(ns: NS): Promise<void> {
 
   const { args, flags } = validationReport;
 
-  await template(ns, args, flags);
+  await trade(ns, args, flags);
 }
 
-export async function template(
+export async function trade(
   ns: NS,
   { host }: typeof argsTemplate,
   { d: depth }: typeof flagsTemplate
 ) {
-  console.log("template");
+  const stock = ns.stock;
+  const fee = stock.getConstants().StockMarketCommission;
+  while (true) {
+    stock.get
+
+    ns.sleep(stock.getConstants().msPerStockUpdate);
+  }
 }

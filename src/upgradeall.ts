@@ -1,12 +1,8 @@
 import { NS } from "@ns";
 import { validateScriptInput } from "/lib/utilities";
-const argsTemplate = {
-  host: "n00dles",
-};
-const flagsTemplate = {
-  //depth
-  d: 10,
-};
+import { upgrade } from "/lib/upgrade";
+const argsTemplate = {};
+const flagsTemplate = {};
 
 export async function main(ns: NS): Promise<void> {
   const validationReport = validateScriptInput(ns, flagsTemplate, argsTemplate);
@@ -16,13 +12,8 @@ export async function main(ns: NS): Promise<void> {
 
   const { args, flags } = validationReport;
 
-  await template(ns, args, flags);
-}
+  const _upgrade = (host: string) => upgrade(ns, { host }, {});
 
-export async function template(
-  ns: NS,
-  { host }: typeof argsTemplate,
-  { d: depth }: typeof flagsTemplate
-) {
-  console.log("template");
+  _upgrade(ns.getHostname());
+  ns.getPurchasedServers().forEach(_upgrade);
 }
