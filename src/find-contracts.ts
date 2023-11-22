@@ -1,7 +1,7 @@
 import { NS } from "@ns";
 import { validateScriptInput } from "/lib/utilities";
-import { newLine } from "./lib/misc";
-import { walkDeepFirst } from "./lib/walkDeepFirst";
+import { newLine } from "/lib/misc";
+import { walkDeepFirst } from "/lib/walkDeepFirst";
 const argsTemplate = {};
 const flagsTemplate = {
   //depth

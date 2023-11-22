@@ -5,8 +5,8 @@ import {
 import {
   lineHeader,
   newLine
-} from "./lib/misc";
-import { walkDeepFirst } from "./lib/walkDeepFirst";
+} from "/lib/misc";
+import { walkDeepFirst } from "/lib/walkDeepFirst";
 import { analyze } from "/lib/analyze";
 const argsTemplate = {};
 const flagsTemplate = {

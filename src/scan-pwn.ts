@@ -2,9 +2,9 @@ import { NS } from "@ns";
 import {
   validateScriptInput,
 } from "/lib/utilities";
-import { scpExtensions } from "./lib/misc";
-import { walkDeepFirst } from "./lib/walkDeepFirst";
-import { getAvailableExes } from "./lib/getAvailableExes";
+import { scpExtensions } from "/lib/misc";
+import { walkDeepFirst } from "/lib/walkDeepFirst";
+import { getAvailableExes } from "/lib/getAvailableExes";
 import { analyze } from "/lib/analyze";
 const argsTemplate = {};
 const flagsTemplate = {

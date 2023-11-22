@@ -1,7 +1,7 @@
 import { NS, ScriptArg } from "@ns";
 import { defaultMaxThreads } from "/lib/defaultMaxThreads";
 import { TFlag, validateScriptInput } from "/lib/utilities";
-import { scpExtensions } from "./misc";
+import { scpExtensions } from "/lib/misc";
 
 const argsTemplate = {
   host: "n00dles",

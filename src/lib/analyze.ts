@@ -1,6 +1,6 @@
 import { NS } from "@ns";
 import { validateScriptInput } from "/lib/utilities";
-import { lineHeader, newLine } from "./misc";
+import { lineHeader, newLine } from "/lib/misc";
 const argsTemplate = {
   host: "n00dles",
 };

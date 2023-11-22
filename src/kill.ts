@@ -1,6 +1,6 @@
 import { NS } from "@ns";
-import { validateScriptInput } from "./lib/utilities";
-import { walkDeepFirst } from "./lib/walkDeepFirst";
+import { validateScriptInput } from "/lib/utilities";
+import { walkDeepFirst } from "/lib/walkDeepFirst";
 const argsTemplate = {
   script: "lib/weaken.js",
 };
