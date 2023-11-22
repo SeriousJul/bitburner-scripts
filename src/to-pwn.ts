@@ -53,7 +53,6 @@ export async function toPwn(
         ns.tprintf(newLine);
       }
     },
-    ns.getHostname(),
     { excludes: ns.getPurchasedServers() }
   );
 }
