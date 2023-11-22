@@ -15,21 +15,24 @@ export async function walkDeepFirst<
 >(
   ns: NS,
   depth: number = 1,
-  callback: (host: string, acc: T) => Promise<void>,
-  rootHost: string = ns.getHostname(),
-  accOptions?: {
-    initValue?: T;
-    reduce?: (host: string, acc: T) => T;
-    excludes: string[];
+  callback: (
+    host: string,
+    acc: T
+  ) => Promise<Exclude<T, IAccumulatorData> | void>,
+  options?: {
+    initValue?: Exclude<T, IAccumulatorData>;
+    rootHost?: string;
+    excludes?: string[];
   }
 ) {
-  const excludes = accOptions?.excludes || [];
+  const excludes = options?.excludes || [];
+  const rootHost = options?.rootHost || ns.getHostname();
   const walk = async (host: string, acc: T) => {
     if (acc.depth > depth) {
       return;
     }
 
-    await callback(host, acc);
+    const customAcc = await callback(host, acc);
 
     const scannedHosts = ns
       .scan(host)
@@ -42,7 +45,7 @@ export async function walkDeepFirst<
     for (const scannedHost of scannedHosts) {
       await walk(scannedHost, {
         ...acc,
-        ...accOptions?.reduce?.(scannedHost, acc),
+        ...customAcc,
         depth: acc.depth + 1,
         nodes: [...acc.nodes, host],
       });
@@ -51,7 +54,7 @@ export async function walkDeepFirst<
 
   const initialValue: T = {
     ...defaultIAccumulatorData,
-    ...accOptions?.initValue,
+    ...options?.initValue,
   } as T;
 
   await walk(rootHost, initialValue);

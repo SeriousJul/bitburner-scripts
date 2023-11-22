@@ -1,11 +1,12 @@
 import { NS } from "@ns";
+import { defaultDepth } from "/lib/defaultDepth";
 import { validateScriptInput } from "/lib/utilities";
 const argsTemplate = {
   host: "n00dles",
 };
 const flagsTemplate = {
   //depth
-  d: 10,
+  d: defaultDepth,
 };
 
 export async function main(ns: NS): Promise<void> {

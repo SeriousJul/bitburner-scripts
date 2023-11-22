@@ -1,17 +1,12 @@
 import { NS } from "@ns";
-import {
-  validateScriptInput,
-} from "/lib/utilities";
-import {
-  lineHeader,
-  newLine
-} from "/lib/misc";
+import { defaultDepth } from "/lib/defaultDepth";
+import { newLine } from "/lib/misc";
+import { validateScriptInput } from "/lib/utilities";
 import { walkDeepFirst } from "/lib/walkDeepFirst";
-import { analyze } from "/lib/analyze";
 const argsTemplate = {};
 const flagsTemplate = {
   //depth
-  d: 10,
+  d: defaultDepth,
 };
 
 export async function main(ns: NS): Promise<void> {

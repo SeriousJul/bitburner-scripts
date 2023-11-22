@@ -3,7 +3,10 @@ import { validateScriptInput } from "/lib/utilities";
 const argsTemplate = {
   host: "n00dles",
 };
-const flagsTemplate = {};
+const flagsTemplate = {
+  //budget in percentage of owning money
+  b: 100,
+};
 
 export async function main(ns: NS): Promise<void> {
   const validationReport = validateScriptInput(ns, flagsTemplate, argsTemplate);
@@ -19,11 +22,19 @@ export async function main(ns: NS): Promise<void> {
 export async function upgrade(
   ns: NS,
   { host }: typeof argsTemplate,
-  {}: typeof flagsTemplate
+  { b: budgetRatio }: typeof flagsTemplate
 ) {
+  const budget = ns.getPlayer().money * budgetRatio;
   const ram = ns.getServerMaxRam(host);
   const newRam = ram * 2;
-  if (ns.upgradePurchasedServer(host, newRam)) {
-    ns.tprintf("Upgrading %s with %sGB", host, newRam);
+  if (budget >= ns.getPurchasedServerUpgradeCost(host, newRam)) {
+    const message = ns.sprintf("Upgrade %s with %sGB", host, newRam);
+    if (ns.upgradePurchasedServer(host, newRam)) {
+      ns.toast(message, "success");
+      return true;
+    } else {
+      ns.toast(`Failed to ${message}`, "error");
+    }
   }
+  return false;
 }

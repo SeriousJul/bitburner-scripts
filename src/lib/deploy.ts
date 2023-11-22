@@ -1,7 +1,7 @@
 import { NS, ScriptArg } from "@ns";
 import { defaultMaxThreads } from "/lib/defaultMaxThreads";
 import { TFlag, validateScriptInput } from "/lib/utilities";
-import { scpExtensions } from "/lib/misc";
+import { uploadLib } from "/lib/uploadLib";
 
 const argsTemplate = {
   host: "n00dles",
@@ -34,15 +34,7 @@ export async function deploy(
 ): Promise<number> {
   if (!ns.hasRootAccess(host)) return 0;
 
-  /** upload pwn lib */
-  const filesToUpload = ns
-    .ls("home", "lib/")
-    .filter(
-      (file) =>
-        !!scpExtensions.filter((extension) => file.endsWith(extension)).length
-    )
-    .concat([file]);
-  ns.scp(filesToUpload, host, "home");
+  uploadLib(ns, file, host);
 
   const threads = Math.floor(
     (ns.getServerMaxRam(host) - ns.getServerUsedRam(host)) /
@@ -55,3 +47,4 @@ export async function deploy(
   }
   return 0;
 }
+

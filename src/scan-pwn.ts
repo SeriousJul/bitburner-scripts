@@ -1,15 +1,14 @@
 import { NS } from "@ns";
-import {
-  validateScriptInput,
-} from "/lib/utilities";
-import { scpExtensions } from "/lib/misc";
-import { walkDeepFirst } from "/lib/walkDeepFirst";
-import { getAvailableExes } from "/lib/getAvailableExes";
 import { analyze } from "/lib/analyze";
+import { defaultDepth } from "/lib/defaultDepth";
+import { getAvailableExes } from "/lib/getAvailableExes";
+import { scpExtensions } from "/lib/misc";
+import { validateScriptInput } from "/lib/utilities";
+import { walkDeepFirst } from "/lib/walkDeepFirst";
 const argsTemplate = {};
 const flagsTemplate = {
   // depth
-  d: 10,
+  d: defaultDepth,
 };
 
 export async function main(ns: NS): Promise<void> {
@@ -52,15 +51,6 @@ export async function main(ns: NS): Promise<void> {
         )
         .forEach((file) => ns.scp(file, "home", host));
 
-      /** upload pwn lib */
-      ns.ls("home", "lib/")
-        .filter(
-          (file) =>
-            !!scpExtensions.filter((extension) => file.endsWith(extension))
-              .length
-        )
-        .forEach((file) => ns.scp(file, host, "home"));
-
       // const pid = ns.run(
       //   "lib/analyze.js",
       //   {},
@@ -73,7 +63,6 @@ export async function main(ns: NS): Promise<void> {
       // }
       analyze(ns, acc.nodes.concat([host]).join(" -> "), host);
     },
-    ns.getHostname(),
     { excludes: ns.getPurchasedServers() }
   );
 }

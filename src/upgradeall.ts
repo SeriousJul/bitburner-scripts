@@ -2,7 +2,12 @@ import { NS } from "@ns";
 import { validateScriptInput } from "/lib/utilities";
 import { upgrade } from "/lib/upgrade";
 const argsTemplate = {};
-const flagsTemplate = {};
+const flagsTemplate = {
+  // default timer in seconds
+  s: 60,
+  //budget in percentage of owning money
+  b: 10,
+};
 
 export async function main(ns: NS): Promise<void> {
   const validationReport = validateScriptInput(ns, flagsTemplate, argsTemplate);
@@ -12,8 +17,17 @@ export async function main(ns: NS): Promise<void> {
 
   const { args, flags } = validationReport;
 
-  const _upgrade = (host: string) => upgrade(ns, { host }, {});
+  while (true) {
+    const server = ns
+      .getPurchasedServers()
+      .map((host) => ({ host, ram: ns.getServerMaxRam(host) }))
+      .sort(({ ram: ramA }, { ram: ramB }) => {
+        return ramA - ramB;
+      })
+      .shift();
+    if (server)
+      if (await upgrade(ns, { host: server.host }, { ...flags })) continue;
 
-  _upgrade(ns.getHostname());
-  ns.getPurchasedServers().forEach(_upgrade);
+    await ns.sleep(flags.s * 1000);
+  }
 }

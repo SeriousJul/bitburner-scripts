@@ -1,14 +1,15 @@
 import { NS } from "@ns";
+import { defaultDepth } from "/lib/defaultDepth";
+import { defaultMaxThreads } from "/lib/defaultMaxThreads";
+import { deploy } from "/lib/deploy";
 import { validateScriptInput } from "/lib/utilities";
 import { walkDeepFirst } from "/lib/walkDeepFirst";
-import { deploy } from "/lib/deploy";
-import { defaultMaxThreads } from "/lib/defaultMaxThreads";
 const argsTemplate = {
   target: "n00dles",
 };
 const flagsTemplate = {
   // depth
-  d: 10,
+  d: defaultDepth,
   // with home
   w: false,
   // max threads
