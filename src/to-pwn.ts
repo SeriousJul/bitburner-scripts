@@ -42,13 +42,15 @@ export async function toPwn(
         return;
       }
 
-      if (!server.backdoorInstalled || !server.hasAdminRights) {
-        ns.tprintf(acc.nodes.concat([host]).join("->"));
+      if (!server.backdoorInstalled && server.hasAdminRights) {
         ns.tprintf(
-          "root(%s)\tbackdoor(%s)\thackdiff(%s)",
-          server.hasAdminRights,
-          server.backdoorInstalled,
-          server.requiredHackingSkill
+          "home;" +
+            acc.nodes
+              .slice(1)
+              .concat([host])
+              .map((node) => `connect ${node};`)
+              .join("") +
+            "backdoor;"
         );
         ns.tprintf(newLine);
       }

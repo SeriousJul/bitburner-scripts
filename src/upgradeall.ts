@@ -3,10 +3,10 @@ import { validateScriptInput } from "/lib/utilities";
 import { upgrade } from "/lib/upgrade";
 const argsTemplate = {};
 const flagsTemplate = {
-  // default timer in seconds
-  s: 60,
   //budget in percentage of owning money
-  b: 10,
+  b: 0.1,
+  //prompt
+  p: false,
 };
 
 export async function main(ns: NS): Promise<void> {
@@ -17,7 +17,16 @@ export async function main(ns: NS): Promise<void> {
 
   const { args, flags } = validationReport;
 
-  while (true) {
+  await upgradeall(ns, args, flags);
+}
+
+export async function upgradeall(
+  ns: NS,
+  {}: typeof argsTemplate,
+  { b: budgetRatio, ...flags }: typeof flagsTemplate
+) {
+  let budget = ns.getPlayer().money * budgetRatio;
+  while (!!budget) {
     const server = ns
       .getPurchasedServers()
       .map((host) => ({ host, ram: ns.getServerMaxRam(host) }))
@@ -25,9 +34,16 @@ export async function main(ns: NS): Promise<void> {
         return ramA - ramB;
       })
       .shift();
-    if (server)
-      if (await upgrade(ns, { host: server.host }, { ...flags })) continue;
+    if (!server) return;
 
-    await ns.sleep(flags.s * 1000);
+    const price = await upgrade(
+      ns,
+      { host: server.host },
+      { ...flags, b: budget }
+    );
+    budget -= price;
+    if (!price) {
+      return;
+    }
   }
 }

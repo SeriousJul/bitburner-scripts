@@ -1,9 +1,9 @@
 import { NS } from "@ns";
 import { validateScriptInput } from "/lib/utilities";
+import { maxServers } from "/lib/maxServers";
 const argsTemplate = {};
 const flagsTemplate = {
-  //depth
-  pool: 25,
+  pool: maxServers,
   "min-ram": 8,
   ram: 128,
 };
@@ -28,7 +28,7 @@ export async function buy(
     ram: number = initialRam,
     index = ns.getPurchasedServers().length
   ) => {
-    if (ram <= minRam) {
+    if (ram < minRam) {
       return;
     }
     if (ns.getPurchasedServers().length >= pool) {
@@ -37,7 +37,7 @@ export async function buy(
 
     const newHost = ns.purchaseServer("node-" + index, ram);
     if (newHost) {
-      ns.tprintf("Purchased %s with %sGB", newHost, ram);
+      ns.toast(ns.sprintf("Purchased %s with %sGB", newHost, ram), "info");
       purchase(ram, index + 1);
     } else {
       purchase(ram / 2, index);

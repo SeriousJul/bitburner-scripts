@@ -4,8 +4,10 @@ const argsTemplate = {
   host: "n00dles",
 };
 const flagsTemplate = {
-  //budget in percentage of owning money
-  b: 100,
+  //budget
+  b: Number.MAX_SAFE_INTEGER,
+  //Prompt
+  p: false,
 };
 
 export async function main(ns: NS): Promise<void> {
@@ -22,19 +24,21 @@ export async function main(ns: NS): Promise<void> {
 export async function upgrade(
   ns: NS,
   { host }: typeof argsTemplate,
-  { b: budgetRatio }: typeof flagsTemplate
+  { b: budget, p: prompt }: typeof flagsTemplate
 ) {
-  const budget = ns.getPlayer().money * budgetRatio;
   const ram = ns.getServerMaxRam(host);
   const newRam = ram * 2;
-  if (budget >= ns.getPurchasedServerUpgradeCost(host, newRam)) {
+  const price = ns.getPurchasedServerUpgradeCost(host, newRam);
+  if (budget >= price) {
     const message = ns.sprintf("Upgrade %s with %sGB", host, newRam);
-    if (ns.upgradePurchasedServer(host, newRam)) {
+    const doIt =
+      !prompt || (await ns.prompt(message + "?", { type: "boolean" }));
+    if (doIt && ns.upgradePurchasedServer(host, newRam)) {
       ns.toast(message, "success");
-      return true;
+      return price;
     } else {
       ns.toast(`Failed to ${message}`, "error");
     }
   }
-  return false;
+  return 0;
 }

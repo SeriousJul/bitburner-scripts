@@ -9,6 +9,8 @@ const argsTemplate = {};
 const flagsTemplate = {
   // depth
   d: defaultDepth,
+  //print
+  p: true,
 };
 
 export async function main(ns: NS): Promise<void> {
@@ -19,12 +21,18 @@ export async function main(ns: NS): Promise<void> {
 
   const { args, flags } = validationReport;
 
-  const depth: number = flags.d;
+  await pwn(ns, args, flags);
+}
 
+export async function pwn(
+  ns: NS,
+  {}: typeof argsTemplate,
+  { d: depth, p: print }: typeof flagsTemplate
+) {
   const availablesPwn = getAvailableExes(ns);
 
   const run = (name: string, cmd: typeof ns.nuke, host: string) =>
-    ns.tprintf("%s:\t\t\t%s", name, cmd(host));
+    print ? ns.tprintf("%s:\t\t\t%s", name, cmd(host)) : cmd(host);
 
   await walkDeepFirst(
     ns,
@@ -49,19 +57,10 @@ export async function main(ns: NS): Promise<void> {
             !!scpExtensions.filter((extension) => file.endsWith(extension))
               .length
         )
+        .filter((file) => !file.endsWith(".js"))
         .forEach((file) => ns.scp(file, "home", host));
 
-      // const pid = ns.run(
-      //   "lib/analyze.js",
-      //   {},
-      //   host,
-      //   "-h",
-      //   acc.nodes.concat([host]).join(" -> ")
-      // );
-      // while (ns.isRunning(pid)) {
-      //   await ns.sleep(100);
-      // }
-      analyze(ns, acc.nodes.concat([host]).join(" -> "), host);
+      if (print) analyze(ns, acc.nodes.concat([host]).join(" -> "), host);
     },
     { excludes: ns.getPurchasedServers() }
   );

@@ -27,7 +27,7 @@ export async function main(ns: NS): Promise<void> {
 
   const { d: depth } = flags;
   await walkDeepFirst(ns, depth, async (host, acc) => {
-    await deploy(ns, { ...args, host, file }, { ...flags });
+    await deploy(ns, { ...args, host, script: file }, { ...flags });
   });
 }
 

@@ -11,6 +11,8 @@ const argsTemplate = {};
 const flagsTemplate = {
   //depth
   d: defaultDepth,
+  //print
+  p: true,
 };
 
 export async function main(ns: NS): Promise<void> {
@@ -27,7 +29,7 @@ export async function main(ns: NS): Promise<void> {
 export async function ps(
   ns: NS,
   {}: typeof argsTemplate,
-  { d: depth }: typeof flagsTemplate
+  { d: depth, p: print }: typeof flagsTemplate
 ) {
   let processes: (ProcessInfo & { host: string })[] = [];
   await walkDeepFirst(ns, depth, async (host) => {
@@ -39,19 +41,21 @@ export async function ps(
   const threadPadding = 4;
   const argsPadding = 30;
   const hostsPadding = 30;
-  ns.tprintf(
-    linePattern,
-    "Filename".padEnd(fileNamePadding),
-    "T".padEnd(threadPadding),
-    "...Args".padEnd(argsPadding),
-    "...hosts".padEnd(hostsPadding)
-  );
-  ns.tprintf(
-    "-".padStart(
-      fileNamePadding + threadPadding + argsPadding + hostsPadding,
-      "-"
-    )
-  );
+  if (print) {
+    ns.tprintf(
+      linePattern,
+      "Filename".padEnd(fileNamePadding),
+      "T".padEnd(threadPadding),
+      "...Args".padEnd(argsPadding),
+      "...hosts".padEnd(hostsPadding)
+    );
+    ns.tprintf(
+      "-".padStart(
+        fileNamePadding + threadPadding + argsPadding + hostsPadding,
+        "-"
+      )
+    );
+  }
 
   const consolidated = processes.reduce((acc, { host, ...process }) => {
     const accProcess = acc.find(
@@ -67,14 +71,15 @@ export async function ps(
     return acc;
   }, [] as (ProcessInfo & { hosts: string[] })[]);
 
-  consolidated.forEach((process) => {
-    ns.tprintf(
-      linePattern,
-      process.filename.padEnd(fileNamePadding),
-      process.threads.toString().padEnd(threadPadding),
-      `[${process.args.join("] [")}]`.padEnd(argsPadding),
-      `[${process.hosts.join("] [")}]`.padEnd(hostsPadding)
-    );
-  });
+  if (print)
+    consolidated.forEach((process) => {
+      ns.tprintf(
+        linePattern,
+        process.filename.padEnd(fileNamePadding),
+        process.threads.toString().padEnd(threadPadding),
+        `[${process.args.join("] [")}]`.padEnd(argsPadding),
+        `[${process.hosts.join("] [")}]`.padEnd(hostsPadding)
+      );
+    });
   return consolidated;
 }

@@ -16,11 +16,14 @@ export async function main(ns: NS): Promise<void> {
 
   const { args, flags } = validationReport;
 
-  const depth: number = flags.d;
+  await killall(ns, args, flags);
+}
 
-  const run = (name: string, cmd: typeof ns.nuke, host: string) =>
-    ns.tprintf("%s:\t\t\t%s", name, cmd(host));
-
+export async function killall(
+  ns: NS,
+  {}: typeof argsTemplate,
+  { d: depth }: typeof flagsTemplate
+) {
   await walkDeepFirst(ns, depth, async (host, acc) => {
     ns.killall(host);
   });

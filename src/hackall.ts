@@ -40,7 +40,7 @@ export async function main(ns: NS): Promise<void> {
 
     const startedThreads = await deploy(
       ns,
-      { ...args, host, file },
+      { ...args, host, script: file },
       { ...flags, x: threadRemaining },
       "-c",
       c

@@ -6,7 +6,7 @@ import { uploadLib } from "/lib/uploadLib";
 const argsTemplate = {
   host: "n00dles",
   target: "n00dles",
-  file: "lib/hack.js",
+  script: "lib/hack.js",
 };
 const flagsTemplate = {
   // with home
@@ -28,7 +28,7 @@ export async function main(ns: NS): Promise<void> {
 
 export async function deploy(
   ns: NS,
-  { host, target, file }: typeof argsTemplate,
+  { host, target, script: file }: typeof argsTemplate,
   { w: withHome, x: maxThreads }: typeof flagsTemplate,
   ...args: ScriptArg[]
 ): Promise<number> {

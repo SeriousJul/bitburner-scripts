@@ -28,8 +28,8 @@ export function analyze(ns: NS, header: string, host: string) {
   ns.tprintf(lineHeader);
 
   const server = ns.getServer(host);
-  const money = server.moneyAvailable;
-  const maxMoney = server.moneyMax;
+  const money = server.moneyAvailable || 0;
+  const maxMoney = server.moneyMax || 0;
 
   ns.tprintf("root:\t\t\t%s", server.hasAdminRights);
   ns.tprintf("backdoor:\t\t%s", server.backdoorInstalled);
@@ -37,56 +37,56 @@ export function analyze(ns: NS, header: string, host: string) {
   ns.tprintf("max_ram:\t\t%s", server.maxRam);
   ns.tprintf("org:\t\t\t%s", server.organizationName);
   // ns.tprintf("backdoor:\t\t%s", server.);
-  if (!!money && !!maxMoney) {
-    if (!server.hasAdminRights) {
-      ns.tprintf("ports_required:\t%s", server.numOpenPortsRequired);
-    } else {
-      ns.tprintf(newLine);
+  if (!server.hasAdminRights) {
+    ns.tprintf("ports_required:\t%s", server.numOpenPortsRequired);
+  } else {
+    ns.tprintf(newLine);
+    if (maxMoney)
       ns.tprintf(
         "money:\t\t\t%s / %s (%s)",
         ns.formatNumber(money, 3),
         ns.formatNumber(maxMoney, 3),
         ns.formatPercent(money / maxMoney)
       );
-      ns.tprintf(newLine);
+    ns.tprintf(newLine);
 
-      ns.tprintf("min_security:\t\t%s", server.minDifficulty);
-      ns.tprintf("current_security:\t%s", server.hackDifficulty);
-      ns.tprintf("min_hacking:\t\t%s", server.requiredHackingSkill);
-      ns.tprintf("weaken_time:\t\t%s", ns.tFormat(ns.getWeakenTime(host)));
-      ns.tprintf(newLine);
+    ns.tprintf("min_security:\t\t%s", server.minDifficulty);
+    ns.tprintf("current_security:\t%s", server.hackDifficulty);
+    ns.tprintf("min_hacking:\t\t%s", server.requiredHackingSkill);
+    ns.tprintf("weaken_time:\t\t%s", ns.tFormat(ns.getWeakenTime(host)));
+    ns.tprintf(newLine);
 
-      ns.tprintf("hack_time:\t\t%s", ns.tFormat(ns.getHackTime(host)));
-      ns.tprintf(
-        "hack_chance:\t\t%s",
-        ns.formatPercent(ns.hackAnalyzeChance(host))
-      );
-      ns.tprintf(
-        "hack_security:\t\t%s / thread",
-        ns.formatPercent(ns.hackAnalyzeSecurity(1, host))
-      );
-      ns.tprintf(
-        "hack_threads:\t\t%s for %s$",
-        Math.ceil(ns.hackAnalyzeThreads(host, money)),
-        ns.formatNumber(money, 3)
-      );
-      ns.tprintf(newLine);
+    ns.tprintf("hack_time:\t\t%s", ns.tFormat(ns.getHackTime(host)));
+    ns.tprintf(
+      "hack_chance:\t\t%s",
+      ns.formatPercent(ns.hackAnalyzeChance(host))
+    );
+    ns.tprintf(
+      "hack_security:\t\t%s / thread",
+      ns.formatPercent(ns.hackAnalyzeSecurity(1, host))
+    );
+    ns.tprintf(
+      "hack_threads:\t\t%s for %s$",
+      Math.ceil(ns.hackAnalyzeThreads(host, money)),
+      ns.formatNumber(money, 3)
+    );
+    ns.tprintf(newLine);
 
-      ns.tprintf("growth:\t\t\t%s", server.serverGrowth);
-      ns.tprintf("grow_time:\t\t%s", ns.tFormat(ns.getGrowTime(host)));
+    ns.tprintf("growth:\t\t\t%s", server.serverGrowth);
+    ns.tprintf("grow_time:\t\t%s", ns.tFormat(ns.getGrowTime(host)));
+    if (money && maxMoney)
       ns.tprintf(
         "grow_analyze:\t\t%s to %s$",
         Math.ceil(ns.growthAnalyze(host, maxMoney / money)),
         ns.formatNumber(maxMoney, 3)
       );
-      ns.tprintf(
-        "grow_security:\t\t%s / thread",
-        ns.growthAnalyzeSecurity(1, host)
-      );
-      ns.tprintf(newLine);
-      // can't give host parameter
-      // ns.tprintf("weaken_analyze:\t\t%s / thread", ns.weakenAnalyze(1));
-    }
+    ns.tprintf(
+      "grow_security:\t\t%s / thread",
+      ns.growthAnalyzeSecurity(1, host)
+    );
+    ns.tprintf(newLine);
+    // can't give host parameter
+    // ns.tprintf("weaken_analyze:\t\t%s / thread", ns.weakenAnalyze(1));
   }
   ns.tprintf("files:\t\t\t%s", ns.ls(host).join(", "));
 
