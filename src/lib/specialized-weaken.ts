@@ -20,6 +20,10 @@ export async function template(ns: NS, { host }: typeof argsTemplate) {
   await ns.weaken(host);
 }
 
-export function autocomplete(data: any, args: any) {
+export function autocomplete(
+  data: { servers: string[]; scripts: string[] },
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  _args: unknown
+) {
   return data.servers;
 }

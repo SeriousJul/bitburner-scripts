@@ -47,9 +47,9 @@ export async function bot(ns: NS, { w, u, ...flags }: typeof flagsTemplate) {
     /**
      * Upgrade
      */
-    if (u) await upgradeall(ns, {}, { ...flags });
+    if (u) await upgradeall(ns, { ...flags });
 
-    await pwn(ns, {}, { d: defaultDepth, p: false });
+    await pwn(ns, { d: defaultDepth, p: false });
 
     await walkAllHackableServer(ns, async (data) => {
       if (!data.weaken.inProgress && data.weaken.shouldPerform(data)) {
@@ -120,7 +120,7 @@ export async function bot(ns: NS, { w, u, ...flags }: typeof flagsTemplate) {
               JSON.stringify(data.server)
             )
           );
-          killall(ns, {}, { d: defaultDepth });
+          killall(ns, { d: defaultDepth });
           ns.exit();
         }
       }
@@ -168,7 +168,7 @@ async function walkAllHackableServer(
     if (!shouldContinue) break;
 
     const { hostname } = server;
-    const processes = (await ps(ns, {}, { d: defaultDepth, p: false })).filter(
+    const processes = (await ps(ns, { d: defaultDepth, p: false })).filter(
       (process) => process.args?.[0] === hostname
     );
 

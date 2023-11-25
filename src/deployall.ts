@@ -56,6 +56,10 @@ export async function deployall(
   return threadRemaining;
 }
 
-export function autocomplete(data: any, args: any) {
+export function autocomplete(
+  data: { servers: string[]; scripts: string[] },
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  _args: unknown
+) {
   return [...data.servers, ...data.scripts];
 }
