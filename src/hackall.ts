@@ -29,7 +29,7 @@ export async function main(ns: NS): Promise<void> {
 
   const { d: depth, x: maxThreads, c } = flags;
   let threadRemaining = maxThreads;
-  await walkDeepFirst(ns, depth, async (host, acc) => {
+  await walkDeepFirst(ns, depth, async (host) => {
     if (threadRemaining === 0) {
       return;
     }

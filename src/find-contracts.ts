@@ -15,16 +15,12 @@ export async function main(ns: NS): Promise<void> {
     return;
   }
 
-  const { args, flags } = validationReport;
+  const { flags } = validationReport;
 
-  await findContract(ns, args, flags);
+  await findContract(ns, flags);
 }
 
-export async function findContract(
-  ns: NS,
-  {}: typeof argsTemplate,
-  { d: depth }: typeof flagsTemplate
-) {
+export async function findContract(ns: NS, { d: depth }: typeof flagsTemplate) {
   await walkDeepFirst(ns, depth, async (host, acc) => {
     const contracts = ns.ls(host).filter((file) => file.endsWith(".cct"));
     if (contracts.length) {

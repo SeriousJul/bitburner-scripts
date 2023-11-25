@@ -26,7 +26,7 @@ export async function main(ns: NS): Promise<void> {
   const { args, flags } = validationReport;
 
   const { d: depth } = flags;
-  await walkDeepFirst(ns, depth, async (host, acc) => {
+  await walkDeepFirst(ns, depth, async (host) => {
     await deploy(ns, { ...args, host, script: file }, { ...flags });
   });
 }

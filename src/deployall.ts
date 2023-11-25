@@ -35,7 +35,7 @@ export async function deployall(
   ...scriptArgs: ScriptArg[]
 ) {
   let threadRemaining = maxThreads;
-  if (!!threadRemaining)
+  if (threadRemaining)
     await walkDeepFirst(ns, depth, async (host) => {
       if (threadRemaining === 0) {
         return;

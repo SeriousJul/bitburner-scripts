@@ -14,17 +14,13 @@ export async function main(ns: NS): Promise<void> {
     return;
   }
 
-  const { args, flags } = validationReport;
+  const { flags } = validationReport;
 
-  await killall(ns, args, flags);
+  await killall(ns, flags);
 }
 
-export async function killall(
-  ns: NS,
-  {}: typeof argsTemplate,
-  { d: depth }: typeof flagsTemplate
-) {
-  await walkDeepFirst(ns, depth, async (host, acc) => {
+export async function killall(ns: NS, { d: depth }: typeof flagsTemplate) {
+  await walkDeepFirst(ns, depth, async (host) => {
     ns.killall(host);
   });
 }

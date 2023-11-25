@@ -19,14 +19,13 @@ export async function main(ns: NS): Promise<void> {
     return;
   }
 
-  const { args, flags } = validationReport;
+  const { flags } = validationReport;
 
-  await pwn(ns, args, flags);
+  await pwn(ns, flags);
 }
 
 export async function pwn(
   ns: NS,
-  {}: typeof argsTemplate,
   { d: depth, p: print }: typeof flagsTemplate
 ) {
   const availablesPwn = getAvailableExes(ns);

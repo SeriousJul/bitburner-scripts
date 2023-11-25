@@ -14,7 +14,7 @@ export async function walkDeepFirst<
   T extends IAccumulatorData = IAccumulatorData
 >(
   ns: NS,
-  depth: number = 1,
+  depth = 1,
   callback: (
     host: string,
     acc: T

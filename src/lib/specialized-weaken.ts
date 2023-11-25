@@ -11,16 +11,12 @@ export async function main(ns: NS): Promise<void> {
     return;
   }
 
-  const { args, flags } = validationReport;
+  const { args } = validationReport;
 
-  await template(ns, args, flags);
+  await template(ns, args);
 }
 
-export async function template(
-  ns: NS,
-  { host }: typeof argsTemplate,
-  {}: typeof flagsTemplate
-) {
+export async function template(ns: NS, { host }: typeof argsTemplate) {
   await ns.weaken(host);
 }
 

@@ -2,11 +2,8 @@ import { NS, ProcessInfo } from "@ns";
 import { defaultDepth } from "/lib/defaultDepth";
 import { validateScriptInput } from "/lib/utilities";
 import {
-  IAccumulatorData,
-  defaultIAccumulatorData,
-  walkDeepFirst,
+  walkDeepFirst
 } from "/lib/walkDeepFirst";
-import { lineHeader } from "/lib/misc";
 const argsTemplate = {};
 const flagsTemplate = {
   //depth
@@ -21,17 +18,15 @@ export async function main(ns: NS): Promise<void> {
     return;
   }
 
-  const { args, flags } = validationReport;
+  const { flags } = validationReport;
 
-  await ps(ns, args, flags);
+  await ps(ns, flags);
 }
 
-export async function ps(
-  ns: NS,
-  {}: typeof argsTemplate,
-  { d: depth, p: print }: typeof flagsTemplate
-) {
-  let processes: (ProcessInfo & { host: string })[] = [];
+export type PSData = ProcessInfo & { hosts: string[] };
+
+export async function ps(ns: NS, { d: depth, p: print }: typeof flagsTemplate) {
+  const processes: (ProcessInfo & { host: string })[] = [];
   await walkDeepFirst(ns, depth, async (host) => {
     processes.push(...ns.ps(host).map((process) => ({ ...process, host })));
   });
@@ -69,7 +64,7 @@ export async function ps(
       accProcess.threads += process.threads;
     }
     return acc;
-  }, [] as (ProcessInfo & { hosts: string[] })[]);
+  }, [] as PSData[]);
 
   if (print)
     consolidated.forEach((process) => {

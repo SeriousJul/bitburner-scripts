@@ -1,7 +1,7 @@
 import { NS, ScriptArg } from "@ns";
 import { defaultMaxThreads } from "/lib/defaultMaxThreads";
-import { TFlag, validateScriptInput } from "/lib/utilities";
 import { uploadLib } from "/lib/uploadLib";
+import { validateScriptInput } from "/lib/utilities";
 
 const argsTemplate = {
   host: "n00dles",
@@ -36,15 +36,15 @@ export async function deploy(
 
   uploadLib(ns, file, host);
 
+  const margin = host === "home" && !withHome ? 8 : 0;
   const threads = Math.floor(
-    (ns.getServerMaxRam(host) - ns.getServerUsedRam(host)) /
+    (ns.getServerMaxRam(host) - ns.getServerUsedRam(host) - margin) /
       ns.getScriptRam(file)
   );
-  if (!!threads && (withHome || host !== "home")) {
+  if (threads) {
     const limitedThreads = Math.min(threads, maxThreads);
     ns.exec(file, host, limitedThreads, target, ...args);
     return limitedThreads;
   }
   return 0;
 }
-

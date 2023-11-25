@@ -15,18 +15,17 @@ export async function main(ns: NS): Promise<void> {
     return;
   }
 
-  const { args, flags } = validationReport;
+  const { flags } = validationReport;
 
-  await upgradeall(ns, args, flags);
+  await upgradeall(ns, flags);
 }
 
 export async function upgradeall(
   ns: NS,
-  {}: typeof argsTemplate,
   { b: budgetRatio, ...flags }: typeof flagsTemplate
 ) {
   let budget = ns.getPlayer().money * budgetRatio;
-  while (!!budget) {
+  while (budget) {
     const server = ns
       .getPurchasedServers()
       .map((host) => ({ host, ram: ns.getServerMaxRam(host) }))

@@ -15,16 +15,12 @@ export async function main(ns: NS): Promise<void> {
     return;
   }
 
-  const { args, flags } = validationReport;
+  const { flags } = validationReport;
 
-  await toPwn(ns, args, flags);
+  await toPwn(ns, flags);
 }
 
-export async function toPwn(
-  ns: NS,
-  {}: typeof argsTemplate,
-  { d: depth }: typeof flagsTemplate
-) {
+export async function toPwn(ns: NS, { d: depth }: typeof flagsTemplate) {
   await walkDeepFirst(
     ns,
     depth,

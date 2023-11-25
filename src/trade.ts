@@ -21,7 +21,7 @@ export async function trade(
 ) {
   const stock = ns.stock;
   const fee = stock.getConstants().StockMarketCommission;
-  while (true) {
+  for (;;) {
     //TODO
     ns.sleep(stock.getConstants().msPerStockUpdate);
   }

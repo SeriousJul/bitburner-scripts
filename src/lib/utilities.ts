@@ -81,16 +81,16 @@ export function getArgs<
   let nsFlags = {} as ReturnType<typeof ns.flags>;
   try {
     nsFlags = ns.flags(tmp);
+    // eslint-disable-next-line no-empty
   } catch (e) {}
   const { _, ...flags } = nsFlags;
   return {
     flags: flags as F,
     args: Object.keys(argsTemplate).reduce((acc, _value, index) => {
       const value = _value as keyof A;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       acc[value] = (_ as any)[index];
       return acc;
     }, {} as A),
   };
 }
-
-

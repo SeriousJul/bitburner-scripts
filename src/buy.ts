@@ -14,14 +14,13 @@ export async function main(ns: NS): Promise<void> {
     return;
   }
 
-  const { args, flags } = validationReport;
+  const { flags } = validationReport;
 
-  await buy(ns, args, flags);
+  await buy(ns, flags);
 }
 
 export async function buy(
   ns: NS,
-  {}: typeof argsTemplate,
   { pool, "min-ram": minRam, ram: initialRam }: typeof flagsTemplate
 ) {
   const purchase = (

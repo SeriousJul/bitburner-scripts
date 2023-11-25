@@ -1,10 +1,10 @@
-import { NS } from "@ns";
+import { NS, Server } from "@ns";
 import { buy } from "/buy";
 import { deployall } from "/deployall";
 import { defaultDepth } from "/lib/defaultDepth";
 import { validateScriptInput } from "/lib/utilities";
 import { walkDeepFirst } from "/lib/walkDeepFirst";
-import { ps } from "/ps";
+import { PSData, ps } from "/ps";
 import { upgradeall } from "/upgradeall";
 import { maxServers } from "/lib/maxServers";
 import { pwn } from "/pwn";
@@ -17,6 +17,7 @@ const flagsTemplate = {
   b: 0.1,
   //prompt
   p: false,
+  u: false,
 };
 
 export async function main(ns: NS): Promise<void> {
@@ -25,9 +26,9 @@ export async function main(ns: NS): Promise<void> {
     return;
   }
 
-  const { args, flags } = validationReport;
+  const { flags } = validationReport;
 
-  await bot(ns, args, flags);
+  await bot(ns, flags);
 }
 
 const library = {
@@ -36,105 +37,95 @@ const library = {
   specializedWeaken: "lib/specialized-weaken.js",
 };
 
-export async function bot(
-  ns: NS,
-  {}: typeof argsTemplate,
-  { w, ...flags }: typeof flagsTemplate
-) {
-  while (true) {
+export async function bot(ns: NS, { w, u, ...flags }: typeof flagsTemplate) {
+  for (;;) {
     /**
      * Early game getting the 25 servers
      */
-    await buy(ns, {}, { pool: maxServers, "min-ram": 2, ram: 2 });
+    await buy(ns, { pool: maxServers, "min-ram": 2, ram: 2 });
 
     /**
      * Upgrade
      */
-    // await upgradeall(ns, {}, { ...flags });
+    if (u) await upgradeall(ns, {}, { ...flags });
 
     await pwn(ns, {}, { d: defaultDepth, p: false });
 
-    const servers = await allServers(ns);
-    let threadsNotDeployed = 0;
-    while (servers.length) {
-      const server = servers.pop();
-      if (!server) break;
-      if (!!threadsNotDeployed) break;
-
-      const { hostname } = server;
-      const processes = (
-        await ps(ns, {}, { d: defaultDepth, p: false })
-      ).filter((process) => process.args?.[0] === hostname);
-
-      const weakenInProgress = processes.find(
-        (process) => process.filename === library.specializedWeaken
-      );
-      const serverSecurity = ns.getServerSecurityLevel(hostname);
-      const serverMinSecurity = ns.getServerMinSecurityLevel(hostname);
-      if (!weakenInProgress && serverSecurity > serverMinSecurity) {
-        threadsNotDeployed = await deployall(
+    await walkAllHackableServer(ns, async (data) => {
+      if (!data.weaken.inProgress && data.weaken.shouldPerform(data)) {
+        return !(await deployall(
           ns,
-          { script: library.specializedWeaken, target: hostname },
+          { script: library.specializedWeaken, target: data.server.hostname },
           {
             d: defaultDepth,
             w,
-            x: getOptimalThreadsToWeaken(ns, serverSecurity, serverMinSecurity),
+            x: getOptimalThreadsToWeaken(
+              ns,
+              data.weaken.serverSecurity,
+              data.weaken.serverMinSecurity
+            ),
           }
-        );
+        ));
       }
+      return true;
+    });
 
-      const growInProgress = processes.find(
-        (process) => process.filename === library.specializedGrow
-      );
-      const money = ns.getServerMoneyAvailable(hostname);
-      const maxMoney = ns.getServerMaxMoney(hostname);
-      if (!growInProgress && money < maxMoney) {
-        await ns.sleep(1);
-        threadsNotDeployed = await deployall(
+    await walkAllHackableServer(ns, async (data) => {
+      if (!data.grow.inProgress && data.grow.shouldPerform(data)) {
+        return !(await deployall(
           ns,
-          { script: library.specializedGrow, target: hostname },
+          { script: library.specializedGrow, target: data.server.hostname },
           {
             d: defaultDepth,
             w,
-            x: !!money
-              ? Math.ceil(ns.growthAnalyze(hostname, maxMoney / money))
+            x: data.grow.money
+              ? Math.ceil(
+                  ns.growthAnalyze(
+                    data.server.hostname,
+                    data.grow.maxMoney / data.grow.money
+                  )
+                )
               : 100,
           }
-        );
+        ));
       }
+      return true;
+    });
 
-      const hackInProgress = processes.find(
-        (process) => process.filename === library.specializedHack
-      );
-      if (!hackInProgress && money && ns.hackAnalyzeChance(hostname) > 0) {
-        const hackThreads = ns.hackAnalyzeThreads(hostname, money / 2);
+    await walkAllHackableServer(ns, async (data) => {
+      if (!data.hack.inProgress && data.hack.shouldPerform(data)) {
+        const hackThreads = ns.hackAnalyzeThreads(
+          data.server.hostname,
+          data.grow.money / 3
+        );
         //For some reason, it return -1 in some case, I need to understand those
         if (hackThreads >= 0) {
-          await ns.sleep(1);
-          threadsNotDeployed = await deployall(
+          // await ns.sleep(1);
+          return !(await deployall(
             ns,
-            { script: library.specializedHack, target: hostname },
+            { script: library.specializedHack, target: data.server.hostname },
             {
               d: defaultDepth,
               w,
               x: Math.ceil(hackThreads),
             }
-          );
+          ));
         } else {
           //Print all kill all workers
           ns.tprint(
             ns.sprintf(
               "Could not hackAnalyse %s: %s %s",
-              hostname,
+              data.server.hostname,
               hackThreads,
-              JSON.stringify(server)
+              JSON.stringify(data.server)
             )
           );
           killall(ns, {}, { d: defaultDepth });
           ns.exit();
         }
       }
-    }
+      return true;
+    });
 
     if (flags.p && !(await ns.prompt("Continue?", { type: "boolean" }))) {
       ns.exit();
@@ -143,7 +134,79 @@ export async function bot(
   }
 }
 
-async function allServers(ns: NS) {
+interface WalkCallbackData {
+  server: Server;
+  processes: PSData[];
+  weaken: {
+    inProgress: boolean;
+    serverSecurity: number;
+    serverMinSecurity: number;
+    shouldPerform: (data: WalkCallbackData) => boolean;
+  };
+  grow: {
+    inProgress: boolean;
+    money: number;
+    maxMoney: number;
+    shouldPerform: (data: WalkCallbackData) => boolean;
+  };
+  hack: {
+    inProgress: boolean;
+    hackChance: number;
+    shouldPerform: (data: WalkCallbackData) => boolean;
+  };
+}
+
+async function walkAllHackableServer(
+  ns: NS,
+  callback: (data: WalkCallbackData) => Promise<boolean>
+) {
+  const servers = await allHackableServersSorted(ns, "money-asc");
+  let shouldContinue = true;
+  while (servers.length) {
+    const server = servers.pop();
+    if (!server) break;
+    if (!shouldContinue) break;
+
+    const { hostname } = server;
+    const processes = (await ps(ns, {}, { d: defaultDepth, p: false })).filter(
+      (process) => process.args?.[0] === hostname
+    );
+
+    shouldContinue = await callback({
+      server,
+      processes,
+      weaken: {
+        inProgress: !!processes.find(
+          (process) => process.filename === library.specializedWeaken
+        ),
+        serverMinSecurity: ns.getServerMinSecurityLevel(hostname),
+        serverSecurity: ns.getServerSecurityLevel(hostname),
+        shouldPerform: (data) =>
+          data.weaken.serverSecurity > data.weaken.serverMinSecurity,
+      },
+      grow: {
+        inProgress: !!processes.find(
+          (process) => process.filename === library.specializedGrow
+        ),
+        maxMoney: ns.getServerMaxMoney(hostname),
+        money: ns.getServerMoneyAvailable(hostname),
+        shouldPerform: (data) => data.grow.money < data.grow.maxMoney,
+      },
+      hack: {
+        inProgress: !!processes.find(
+          (process) => process.filename === library.specializedHack
+        ),
+        hackChance: ns.hackAnalyzeChance(hostname),
+        shouldPerform: (data) => !!data.grow.money && data.hack.hackChance > 0,
+      },
+    });
+  }
+}
+
+async function allHackableServersSorted(
+  ns: NS,
+  order: "money-asc" | "money-desc"
+) {
   const hosts: string[] = [];
   await walkDeepFirst(ns, defaultDepth, async (host) => {
     hosts.push(host);
@@ -156,9 +219,10 @@ async function allServers(ns: NS) {
       (server) => (server.requiredHackingSkill || 0) <= ns.getHackingLevel()
     )
     .filter((server) => !!server.moneyMax)
-    .sort(
-      ({ moneyMax: moneyMaxA }, { moneyMax: moneyMaxB }) =>
-        moneyMaxB! - moneyMaxA!
+    .sort(({ moneyMax: moneyMaxA }, { moneyMax: moneyMaxB }) =>
+      order === "money-asc"
+        ? (moneyMaxB || 0) - (moneyMaxA || 0)
+        : (moneyMaxA || 0) - (moneyMaxB || 0)
     );
 }
 

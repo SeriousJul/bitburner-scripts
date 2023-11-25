@@ -18,14 +18,13 @@ export async function main(ns: NS): Promise<void> {
     return;
   }
 
-  const { args, flags } = validationReport;
+  const { flags } = validationReport;
 
-  await scan(ns, args, flags);
+  await scan(ns, flags);
 }
 
 export async function scan(
   ns: NS,
-  {}: typeof argsTemplate,
   { d: depth, m: moneyEnabled, s: securityEnabled }: typeof flagsTemplate
 ) {
   await walkDeepFirst(
@@ -66,5 +65,3 @@ export async function scan(
     }
   );
 }
-// ┗
-// ┣

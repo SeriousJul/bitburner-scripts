@@ -1,12 +1,11 @@
 import { NS } from "@ns";
-import { defaultDepth } from "/lib/defaultDepth";
 import { validateScriptInput } from "/lib/utilities";
 import { walkDeepFirst } from "/lib/walkDeepFirst";
+import { defaultDepth } from "/lib/defaultDepth";
 const argsTemplate = {
-  script: "lib/weaken.js",
+  target: "n00dles",
 };
 const flagsTemplate = {
-  // depth
   d: defaultDepth,
 };
 
@@ -18,16 +17,23 @@ export async function main(ns: NS): Promise<void> {
 
   const { args, flags } = validationReport;
 
-  const depth: number = flags.d;
-  const { script } = args;
+  await backdoor(ns, args, flags);
+}
 
-  await walkDeepFirst(ns, depth, async (host) => {
-    ns.ps(host)
-      .filter((process) => process.filename === script)
-      .forEach((process) => ns.kill(process.pid));
+export async function backdoor(
+  ns: NS,
+  { target }: typeof argsTemplate,
+  { d: depth }: typeof flagsTemplate
+) {
+  await walkDeepFirst(ns, depth, async (host, acc) => {
+    if (host === target) {
+      acc.nodes.forEach(ns.singularity.connect);
+      ns.singularity.connect(host);
+      await ns.singularity.installBackdoor();
+    }
   });
 }
 
 export function autocomplete(data: any, args: any) {
-  return data.scripts;
+  return data.servers;
 }
