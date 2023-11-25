@@ -4,6 +4,7 @@ import { defaultMaxThreads } from "/lib/defaultMaxThreads";
 import { deploy as _deploy } from "/lib/deploy";
 import { validateScriptInput } from "/lib/utilities";
 import { walkDeepFirst } from "/lib/walkDeepFirst";
+import { ThreadCounts } from "/lib/misc";
 const argsTemplate = {
   target: "n00dles",
   script: "lib/specialized-hack.js",
@@ -15,6 +16,8 @@ const flagsTemplate = {
   w: false,
   // max threads
   x: defaultMaxThreads,
+  // max home threads
+  xh: defaultMaxThreads,
 };
 
 export async function main(ns: NS): Promise<void> {
@@ -31,29 +34,30 @@ export async function main(ns: NS): Promise<void> {
 export async function deployall(
   ns: NS,
   { script, ...args }: typeof argsTemplate,
-  { d: depth, x: maxThreads, ...flags }: typeof flagsTemplate,
+  {
+    d: depth,
+    x: maxThreads,
+    xh: maxHomeThreads,
+    ...flags
+  }: typeof flagsTemplate,
   ...scriptArgs: ScriptArg[]
-) {
-  let threadRemaining = maxThreads;
-  if (threadRemaining)
+): Promise<boolean> {
+  const threadRemaining = new ThreadCounts(maxHomeThreads, maxThreads);
+  if (!threadRemaining.isEmpty())
     await walkDeepFirst(ns, depth, async (host) => {
-      if (threadRemaining === 0) {
+      if (threadRemaining.isEmpty()) {
         return;
-      }
-
-      if (threadRemaining < 0) {
-        throw new Error("Should not have negative remaining");
       }
 
       const startedThreads = await _deploy(
         ns,
         { ...args, host, script },
-        { ...flags, x: threadRemaining },
+        { ...flags, x: threadRemaining.getThreadCount(host) },
         ...scriptArgs
       );
-      threadRemaining = threadRemaining - startedThreads;
+      threadRemaining.removeThreads(startedThreads, host);
     });
-  return threadRemaining;
+  return threadRemaining.isEmpty();
 }
 
 export function autocomplete(

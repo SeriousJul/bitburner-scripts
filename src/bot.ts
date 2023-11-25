@@ -2,13 +2,14 @@ import { NS, Server } from "@ns";
 import { buy } from "/buy";
 import { deployall } from "/deployall";
 import { defaultDepth } from "/lib/defaultDepth";
-import { validateScriptInput } from "/lib/utilities";
+import { hasFormulas, validateScriptInput } from "/lib/utilities";
 import { walkDeepFirst } from "/lib/walkDeepFirst";
 import { PSData, ps } from "/ps";
 import { upgradeall } from "/upgradeall";
 import { maxServers } from "/lib/maxServers";
 import { pwn } from "/pwn";
 import { killall } from "/killall";
+import { ThreadCounts } from "/lib/misc";
 const argsTemplate = {};
 const flagsTemplate = {
   //use home in worker pool
@@ -49,67 +50,58 @@ export async function bot(ns: NS, { w, u, ...flags }: typeof flagsTemplate) {
      */
     if (u) await upgradeall(ns, { ...flags });
 
-    await pwn(ns, { d: defaultDepth, p: false });
+    await pwn(ns, { d: defaultDepth, p: false, dl: false });
 
     await walkAllHackableServer(ns, async (data) => {
       if (!data.weaken.inProgress && data.weaken.shouldPerform(data)) {
-        return !(await deployall(
+        const weakenThreadsCounts = weakenThreads(ns, data);
+        return await deployall(
           ns,
           { script: library.specializedWeaken, target: data.server.hostname },
           {
             d: defaultDepth,
             w,
-            x: getOptimalThreadsToWeaken(
-              ns,
-              data.weaken.serverSecurity,
-              data.weaken.serverMinSecurity
-            ),
+            x: weakenThreadsCounts.threads,
+            xh: weakenThreadsCounts.homeThreads,
           }
-        ));
+        );
       }
       return true;
     });
 
     await walkAllHackableServer(ns, async (data) => {
       if (!data.grow.inProgress && data.grow.shouldPerform(data)) {
-        return !(await deployall(
+        const growThreadsCounts = growThreads(ns, data);
+        return await deployall(
           ns,
           { script: library.specializedGrow, target: data.server.hostname },
           {
             d: defaultDepth,
             w,
-            x: data.grow.money
-              ? Math.ceil(
-                  ns.growthAnalyze(
-                    data.server.hostname,
-                    data.grow.maxMoney / data.grow.money
-                  )
-                )
-              : 100,
+            x: growThreadsCounts.threads,
+            xh: growThreadsCounts.homeThreads,
           }
-        ));
+        );
       }
       return true;
     });
 
     await walkAllHackableServer(ns, async (data) => {
       if (!data.hack.inProgress && data.hack.shouldPerform(data)) {
-        const hackThreads = ns.hackAnalyzeThreads(
-          data.server.hostname,
-          data.grow.money / 3
-        );
+        const hackThreadsCounts = hackThreads(ns, data);
         //For some reason, it return -1 in some case, I need to understand those
-        if (hackThreads >= 0) {
+        if (hackThreadsCounts.threads >= 0) {
           // await ns.sleep(1);
-          return !(await deployall(
+          return await deployall(
             ns,
             { script: library.specializedHack, target: data.server.hostname },
             {
               d: defaultDepth,
               w,
-              x: Math.ceil(hackThreads),
+              x: hackThreadsCounts.threads,
+              xh: hackThreadsCounts.homeThreads,
             }
-          ));
+          );
         } else {
           //Print all kill all workers
           ns.tprint(
@@ -226,18 +218,37 @@ async function allHackableServersSorted(
     );
 }
 
+function hackThreads(ns: NS, data: WalkCallbackData): ThreadCounts {
+  return new ThreadCounts(
+    Math.ceil(
+      ns.hackAnalyzeThreads(data.server.hostname, data.grow.money * 0.4)
+    ),
+    Math.ceil(
+      ns.hackAnalyzeThreads(data.server.hostname, data.grow.money * 0.4)
+    )
+  );
+}
+
+function weakenThreads(ns: NS, data: WalkCallbackData): ThreadCounts {
+  return new ThreadCounts(
+    getOptimalThreadsToWeaken(ns, data, getHomeCpuCores(ns)),
+    getOptimalThreadsToWeaken(ns, data)
+  );
+}
+
 function getOptimalThreadsToWeaken(
   ns: NS,
-  serverSecurity: number,
-  serverMinSecurity: number
+  data: WalkCallbackData,
+  cpuCores?: number
 ): number {
+  const { serverSecurity, serverMinSecurity } = data.weaken;
   const target = serverSecurity - serverMinSecurity;
   let lowerBound = 0,
     upperBound = 100e3;
   let threadCount = 0;
   while (lowerBound !== upperBound) {
     threadCount = Math.floor((upperBound - lowerBound) / 2 + lowerBound);
-    const actual = ns.weakenAnalyze(threadCount);
+    const actual = ns.weakenAnalyze(threadCount, cpuCores);
     if (actual >= target && actual <= target + 1) {
       break;
     }
@@ -253,4 +264,46 @@ function getOptimalThreadsToWeaken(
     }
   }
   return threadCount;
+}
+
+function growThreads(ns: NS, data: WalkCallbackData): ThreadCounts {
+  const formulasEnabled = hasFormulas(ns);
+  const cpuCores = getHomeCpuCores(ns);
+  if (formulasEnabled) {
+    return new ThreadCounts(
+      ns.formulas.hacking.growThreads(
+        data.server,
+        ns.getPlayer(),
+        data.grow.maxMoney,
+        cpuCores
+      ),
+      ns.formulas.hacking.growThreads(
+        data.server,
+        ns.getPlayer(),
+        data.grow.maxMoney
+      )
+    );
+  }
+  return new ThreadCounts(
+    data.grow.money
+      ? Math.ceil(
+          ns.growthAnalyze(
+            data.server.hostname,
+            data.grow.maxMoney / data.grow.money,
+            cpuCores
+          )
+        )
+      : 100,
+    data.grow.money
+      ? Math.ceil(
+          ns.growthAnalyze(
+            data.server.hostname,
+            data.grow.maxMoney / data.grow.money
+          )
+        )
+      : 100
+  );
+}
+function getHomeCpuCores(ns: NS) {
+  return ns.getServer("home").cpuCores;
 }

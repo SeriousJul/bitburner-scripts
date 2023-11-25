@@ -35,14 +35,13 @@ export async function deploy(
   if (!ns.hasRootAccess(host)) return 0;
 
   uploadLib(ns, file, host);
-
-  const margin = host === "home" && !withHome ? 8 : 0;
+  const margin = host === "home" && !withHome ? 32 : 0;
   const threads = Math.floor(
     (ns.getServerMaxRam(host) - ns.getServerUsedRam(host) - margin) /
       ns.getScriptRam(file)
   );
   if (threads) {
-    const limitedThreads = Math.min(threads, maxThreads);
+    const limitedThreads = Math.ceil(Math.min(threads, maxThreads));
     ns.exec(file, host, limitedThreads, target, ...args);
     return limitedThreads;
   }

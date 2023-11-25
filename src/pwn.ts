@@ -7,6 +7,7 @@ import { validateScriptInput } from "/lib/utilities";
 import { walkDeepFirst } from "/lib/walkDeepFirst";
 const argsTemplate = {};
 const flagsTemplate = {
+  dl: false,
   // depth
   d: defaultDepth,
   //print
@@ -26,7 +27,7 @@ export async function main(ns: NS): Promise<void> {
 
 export async function pwn(
   ns: NS,
-  { d: depth, p: print }: typeof flagsTemplate
+  { d: depth, p: print, dl }: typeof flagsTemplate
 ) {
   const availablesPwn = getAvailableExes(ns);
 
@@ -49,15 +50,16 @@ export async function pwn(
       }
 
       /** download all files located on server that does not already exist */
-      ns.ls(host)
-        .filter((file) => !ns.fileExists(file))
-        .filter(
-          (file) =>
-            !!scpExtensions.filter((extension) => file.endsWith(extension))
-              .length
-        )
-        .filter((file) => !file.endsWith(".js"))
-        .forEach((file) => ns.scp(file, "home", host));
+      if (dl)
+        ns.ls(host)
+          .filter((file) => !ns.fileExists(file))
+          .filter(
+            (file) =>
+              !!scpExtensions.filter((extension) => file.endsWith(extension))
+                .length
+          )
+          .filter((file) => !file.endsWith(".js"))
+          .forEach((file) => ns.scp(file, "home", host));
 
       if (print) analyze(ns, acc.nodes.concat([host]).join(" -> "), host);
     },

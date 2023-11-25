@@ -88,7 +88,13 @@ export function analyze(ns: NS, header: string, host: string) {
     // can't give host parameter
     // ns.tprintf("weaken_analyze:\t\t%s / thread", ns.weakenAnalyze(1));
   }
-  ns.tprintf("files:\t\t\t%s", ns.ls(host).join(", "));
+  ns.tprintf(
+    "files:\t\t\t%s",
+    ns
+      .ls(host)
+      .filter((file) => !file.endsWith(".js"))
+      .join(", ")
+  );
 
   ns.tprintf(newLine);
   ns.tprintf(newLine);

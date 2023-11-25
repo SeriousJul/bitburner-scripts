@@ -32,14 +32,13 @@ export async function main(ns: NS): Promise<void> {
     return;
   }
 
-  const { args, flags } = validationReport;
+  const { flags } = validationReport;
 
-  await solve(ns, args, flags);
+  await solve(ns, flags);
 }
 
 async function solve(
   ns: NS,
-  {}: typeof argsTemplate,
   { d: dryRun }: typeof flagsTemplate
 ) {
   const calc = (prices: number[]): number => {

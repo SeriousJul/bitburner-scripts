@@ -94,3 +94,7 @@ export function getArgs<
     }, {} as A),
   };
 }
+
+export function hasFormulas(ns: NS) {
+  return ns.fileExists("Formulas.exe", "home");
+}

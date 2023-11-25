@@ -36,7 +36,7 @@ export async function buy(
 
     const newHost = ns.purchaseServer("node-" + index, ram);
     if (newHost) {
-      ns.toast(ns.sprintf("Purchased %s with %sGB", newHost, ram), "info");
+      ns.toast(ns.sprintf("Purchased %s with %sGB ", newHost, ram), "info");
       purchase(ram, index + 1);
     } else {
       purchase(ram / 2, index);
