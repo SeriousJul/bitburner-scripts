@@ -23,11 +23,10 @@ export async function main(ns: NS): Promise<void> {
 }
 
 export async function findContract(ns: NS, { d: depth }: typeof flagsTemplate) {
-  ns.tprintf("Contract types: %s", ns.codingcontract.getContractTypes());
   await walkDeepFirst(ns, depth, async (host, acc) => {
     const contracts = ns.ls(host).filter((file) => file.endsWith(".cct"));
     if (contracts.length) {
-      ns.tprintf(generateConnect(acc, host));
+      ns.tprintf(generateConnect(acc.nodes, host));
       ns.tprintf(
         contracts
           .map(

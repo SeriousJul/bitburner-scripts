@@ -148,8 +148,16 @@ const types: Record<string, IContractDefinition<unknown>> = {
     solve: () => false,
   },
   "Minimum Path Sum in a Triangle": {
-    solvable: false,
-    solve: () => false,
+    solvable: true,
+    solve: (ns, script, host, data) => {
+      return attemp(
+        ns,
+        script,
+        host,
+        data,
+        TriangleMinSum(data as number[][], 0, 0)
+      );
+    },
   },
   "Unique Paths in a Grid I": {
     solvable: false,
@@ -164,8 +172,16 @@ const types: Record<string, IContractDefinition<unknown>> = {
     solve: () => false,
   },
   "Sanitize Parentheses in Expression": {
-    solvable: false,
-    solve: () => false,
+    solvable: true,
+    solve: (ns, script, host, data) => {
+      let solutions: string[] = [];
+      let depth = 1;
+      do {
+        solutions = parenthesisSolutions(data as string, new Set(), depth++);
+      } while (!solutions.length);
+      solutions = [...new Set(solutions)];
+      return attemp(ns, script, host, data, solutions);
+    },
   },
   "Find All Valid Math Expressions": {
     solvable: false,
@@ -210,6 +226,54 @@ const types: Record<string, IContractDefinition<unknown>> = {
   },
 };
 
+function isValidParenthesis(text: string) {
+  let opened = 0;
+  for (const char of [...text]) {
+    if (char === "(") opened++;
+    if (char === ")") opened--;
+    if (opened < 0) return false;
+  }
+  return opened === 0;
+}
+
+function parenthesisSolutions(
+  text: string,
+  acc: Set<string>,
+  depth: number
+): string[] {
+  if (depth === 0) return [];
+  if (acc.has(text)) {
+    return [];
+  }
+  acc.add(text);
+  if (isValidParenthesis(text) || !text) {
+    return [text || ""];
+  }
+  if(text.startsWith(")")){
+    return parenthesisSolutions(text.substring(1), acc, depth - 1);
+  }
+  return [...text]
+    .map((value, index) => {
+      return parenthesisSolutions([...text]
+        .slice(0, index)
+        .concat([...text].slice(index + 1, text.length))
+        .join(""), acc, depth - 1);
+    })
+    .reduce((acc, value) => {
+      return acc.concat(value);
+    }, [] as string[]);
+}
+
+function TriangleMinSum(triangle: number[][], i: number, j: number): number {
+  if (i >= triangle.length || j >= triangle[i].length) {
+    return 0;
+  }
+  const value = triangle[i][j];
+  const left = value + TriangleMinSum(triangle, i + 1, j);
+  const right = value + TriangleMinSum(triangle, i + 1, j + 1);
+  return Math.min(left, right);
+}
+
 function CaesarCipher(text: string, rotation: number): string {
   // A: 65 .... Z: 90
   const AcharCode = "A".charCodeAt(0);
@@ -227,6 +291,7 @@ function CaesarCipher(text: string, rotation: number): string {
     .join("");
 }
 
+//Shamefully stolen from https://github.com/bitburner-official/bitburner-src/blob/6a76e1a9ab58d9b6f103c90793307c61a668334f/src/utils/HammingCodeTools.ts could not figure it out myself
 function HammingEncode(data: number): string {
   const enc: number[] = [0];
   const data_bits: any[] = data.toString(2).split("").reverse();

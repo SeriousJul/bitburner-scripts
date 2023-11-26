@@ -14,7 +14,7 @@ export async function main(ns: NS): Promise<void> {
 }
 
 export async function template(ns: NS) {
-  ns.codingcontract.createDummyContract("HammingCodes: Integer to Encoded Binary");
+  ns.codingcontract.createDummyContract("Sanitize Parentheses in Expression");
   ns.ls("home")
     .filter((file) => file.endsWith(".cct"))
     .forEach((contract) => {
