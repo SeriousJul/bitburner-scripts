@@ -14,7 +14,7 @@ export async function main(ns: NS): Promise<void> {
 }
 
 export async function template(ns: NS) {
-  ns.codingcontract.createDummyContract("Sanitize Parentheses in Expression");
+  ns.codingcontract.createDummyContract("Proper 2-Coloring of a Graph");
   ns.ls("home")
     .filter((file) => file.endsWith(".cct"))
     .forEach((contract) => {

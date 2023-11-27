@@ -40,7 +40,7 @@ export async function deploy(
     (ns.getServerMaxRam(host) - ns.getServerUsedRam(host) - margin) /
       ns.getScriptRam(file)
   );
-  if (threads) {
+  if (threads > 0) {
     const limitedThreads = Math.ceil(Math.min(threads, maxThreads));
     ns.exec(file, host, limitedThreads, target, ...args);
     return limitedThreads;

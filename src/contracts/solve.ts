@@ -198,8 +198,20 @@ const types: Record<string, IContractDefinition<unknown>> = {
     solve: () => false,
   },
   "Proper 2-Coloring of a Graph": {
-    solvable: false,
-    solve: () => false,
+    solvable: true,
+    solve: (ns, script, host, data) => {
+      return attemp(
+        ns,
+        script,
+        host,
+        data,
+        // tryColorGraph(toMapOfVertice((data as any)[1] as number[][]), [])
+        tryColorGraphV2(
+          (data as any)[0] as number,
+          toMapOfVertice((data as any)[1] as number[][])
+        )
+      );
+    },
   },
   "Compression I: RLE Compression": {
     solvable: false,
@@ -225,6 +237,69 @@ const types: Record<string, IContractDefinition<unknown>> = {
     solve: () => false,
   },
 };
+function tryColorGraphV2(
+  count: number,
+  data: Record<number, number[]>
+): number[] {
+  const defaultColor = -1;
+  const tryColorIn = 1;
+  const solution = new Array(count).fill(defaultColor);
+  const checklist: { vertix: number; color: number }[] = [];
+  checklist.push({ vertix: 0, color: tryColorIn });
+  while (checklist.length) {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const { vertix, color } = checklist.pop()!;
+    solution[vertix] = color;
+    for (const neighbor of data[vertix] || []) {
+      if (solution[neighbor] === color) return [];
+      if (solution[neighbor] === defaultColor)
+        checklist.push({ vertix: neighbor, color: (color + 1) % 2 });
+    }
+
+    if (!checklist.length) {
+      const vertixToPush = solution
+        .map((value, index) => ({ value, index }))
+        .find(({ value }) => value === defaultColor)?.index;
+      if (vertixToPush != undefined)
+        checklist.push({ vertix: vertixToPush, color: tryColorIn });
+    }
+  }
+  return solution;
+}
+
+function tryColorGraph(
+  data: Record<number, number[]>,
+  acc: number[],
+  vertix = 0,
+  color = 0
+): number[] {
+  //Bugged, need to figure it out. Cleaning of acc does not bubble up
+  if (acc[vertix] !== undefined && acc[vertix] !== color) {
+    return [];
+  }
+  acc[vertix] = color;
+  if (data[vertix] === undefined) {
+    return acc;
+  }
+  for (const neighbor of data[vertix]) {
+    const result = tryColorGraph(data, acc, neighbor, (color + 1) % 2);
+    if (!result.length) {
+      delete acc[vertix];
+      return [];
+    }
+  }
+  return acc;
+}
+
+function toMapOfVertice(data: number[][]) {
+  return data.reduce((acc, [n1, n2]) => {
+    acc[n1] = acc[n1] || [];
+    acc[n2] = acc[n2] || [];
+    acc[n1] = acc[n1].concat([n2]);
+    acc[n2] = acc[n2].concat([n1]);
+    return acc;
+  }, {} as Record<number, number[]>);
+}
 
 function isValidParenthesis(text: string) {
   let opened = 0;
@@ -249,15 +324,19 @@ function parenthesisSolutions(
   if (isValidParenthesis(text) || !text) {
     return [text || ""];
   }
-  if(text.startsWith(")")){
+  if (text.startsWith(")")) {
     return parenthesisSolutions(text.substring(1), acc, depth - 1);
   }
   return [...text]
     .map((value, index) => {
-      return parenthesisSolutions([...text]
-        .slice(0, index)
-        .concat([...text].slice(index + 1, text.length))
-        .join(""), acc, depth - 1);
+      return parenthesisSolutions(
+        [...text]
+          .slice(0, index)
+          .concat([...text].slice(index + 1, text.length))
+          .join(""),
+        acc,
+        depth - 1
+      );
     })
     .reduce((acc, value) => {
       return acc.concat(value);
