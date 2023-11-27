@@ -14,7 +14,7 @@ export async function main(ns: NS): Promise<void> {
 }
 
 export async function template(ns: NS) {
-  ns.codingcontract.createDummyContract("Generate IP Addresses");
+  ns.codingcontract.createDummyContract("Algorithmic Stock Trader I");
   ns.ls("home")
     .filter((file) => file.endsWith(".cct"))
     .forEach((contract) => {

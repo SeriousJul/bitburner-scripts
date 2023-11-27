@@ -122,8 +122,10 @@ const types: Record<string, IContractDefinition<unknown>> = {
     },
   },
   "Algorithmic Stock Trader I": {
-    solvable: false,
-    solve: () => false,
+    solvable: true,
+    solve: (ns, script, host, data) => {
+      return attemp(ns, script, host, data, maxTxProfit(data as number[]));
+    },
   },
   "Algorithmic Stock Trader II": {
     solvable: false,
@@ -133,22 +135,13 @@ const types: Record<string, IContractDefinition<unknown>> = {
     solvable: true,
     solve: (ns, script, host, data) => {
       const prices = data as number[];
-      function calc(prices: number[]): number {
-        let max = 0;
-        for (let i = 0; i < prices.length - 1; i++) {
-          for (let j = i; j < prices.length; j++) {
-            max = Math.max(max, prices[j] - prices[i]);
-          }
-        }
-        return max;
-      }
 
-      let max = calc(prices);
+      let max = maxTxProfit(prices);
       for (let i = 1; i < prices.length - 1; i++) {
         max = Math.max(
           max,
-          calc(prices.slice(0, i + 1)) +
-            calc(prices.slice(i + 1, prices.length))
+          maxTxProfit(prices.slice(0, i + 1)) +
+            maxTxProfit(prices.slice(i + 1, prices.length))
         );
       }
 
@@ -249,6 +242,16 @@ const types: Record<string, IContractDefinition<unknown>> = {
     solve: () => false,
   },
 };
+
+function maxTxProfit(prices: number[]): number {
+  let max = 0;
+  for (let i = 0; i < prices.length - 1; i++) {
+    for (let j = i; j < prices.length; j++) {
+      max = Math.max(max, prices[j] - prices[i]);
+    }
+  }
+  return max;
+}
 
 function isValidIp(ip: string) {
   const splitted = ip.split(".").filter((value) => !!value);
