@@ -13,8 +13,18 @@ export async function main(ns: NS): Promise<void> {
   await template(ns);
 }
 
+const contractType = "Unique Paths in a Grid II";
 export async function template(ns: NS) {
-  ns.codingcontract.createDummyContract("Algorithmic Stock Trader I");
+  if (
+    !ns
+      .ls("home")
+      .filter((file) => file.endsWith(".cct"))
+      .map((script) => ns.codingcontract.getContractType(script))
+      .find((type) => type === contractType)
+  )
+    ns.codingcontract.createDummyContract(contractType);
+
+
   ns.ls("home")
     .filter((file) => file.endsWith(".cct"))
     .forEach((contract) => {

@@ -169,8 +169,16 @@ const types: Record<string, IContractDefinition<unknown>> = {
     solve: () => false,
   },
   "Unique Paths in a Grid II": {
-    solvable: false,
-    solve: () => false,
+    solvable: true,
+    solve: (ns, script, host, data) => {
+      return attemp(
+        ns,
+        script,
+        host,
+        data,
+        walkDownFirst(data as number[][], 0, 0)
+      );
+    },
   },
   "Shortest Path in a Grid": {
     solvable: false,
@@ -242,6 +250,35 @@ const types: Record<string, IContractDefinition<unknown>> = {
     solve: () => false,
   },
 };
+
+function isFinished(data: number[][], i: number, j: number) {
+  return data.length === i + 1 && data[i].length === j + 1;
+}
+
+function canMoveRight(data: number[][], i: number, j: number) {
+  return data[i].length > j + 1 && data[i][j + 1] !== 1;
+}
+
+function canMoveDown(data: number[][], i: number, j: number) {
+  return data.length > i + 1 && data[i + 1][j] !== 1;
+}
+
+function walkDownFirst(data: number[][], i: number, j: number): number {
+  if (isFinished(data, i, j)) {
+    return 1;
+  }
+
+  let count = 0;
+  if (canMoveDown(data, i, j)) {
+    count += walkDownFirst(data, i + 1, j);
+  }
+
+  if (canMoveRight(data, i, j)) {
+    count += walkDownFirst(data, i, j + 1);
+  }
+
+  return count;
+}
 
 function maxTxProfit(prices: number[]): number {
   let max = 0;
