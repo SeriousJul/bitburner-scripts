@@ -74,12 +74,28 @@ interface IContractDefinition<T> {
 
 const types: Record<string, IContractDefinition<unknown>> = {
   "Find Largest Prime Factor": {
-    solvable: false,
-    solve: () => false,
+    solvable: true,
+    solve: (ns, script, host, data) => {
+      return attemp(
+        ns,
+        script,
+        host,
+        data,
+        primeFactor(data as number)
+      );
+    },
   },
   "Subarray with Maximum Sum": {
-    solvable: false,
-    solve: () => false,
+    solvable: true,
+    solve: (ns, script, host, data) => {
+      return attemp(
+        ns,
+        script,
+        host,
+        data,
+        findMaxSubArraySum(data as number[])
+      );
+    },
   },
   "Total Ways to Sum": {
     solvable: false,
@@ -237,6 +253,31 @@ const types: Record<string, IContractDefinition<unknown>> = {
     solve: () => false,
   },
 };
+
+function primeFactor(integer: number) {
+  for (let i = 2; i < Math.sqrt(integer) + 1; i++) {
+    const factor = integer / i;
+    if (Number.isInteger(factor)) {
+      return primeFactor(factor);
+    }
+  }
+  return integer;
+}
+
+function sumArray(array: number[]) {
+  return array.reduce((acc, value) => acc + value, 0);
+}
+
+function findMaxSubArraySum(array: number[]) {
+  let currentMax = sumArray(array);
+  for (let i = 0; i < array.length - 1; i++) {
+    for (let j = array.length; j > i; j--) {
+      currentMax = Math.max(sumArray(array.slice(i, j)), currentMax);
+    }
+  }
+  return currentMax;
+}
+
 function tryColorGraphV2(
   count: number,
   data: Record<number, number[]>
