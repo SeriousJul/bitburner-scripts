@@ -76,13 +76,7 @@ const types: Record<string, IContractDefinition<unknown>> = {
   "Find Largest Prime Factor": {
     solvable: true,
     solve: (ns, script, host, data) => {
-      return attemp(
-        ns,
-        script,
-        host,
-        data,
-        primeFactor(data as number)
-      );
+      return attemp(ns, script, host, data, primeFactor(data as number));
     },
   },
   "Subarray with Maximum Sum": {
@@ -122,8 +116,10 @@ const types: Record<string, IContractDefinition<unknown>> = {
     solve: () => false,
   },
   "Generate IP Addresses": {
-    solvable: false,
-    solve: () => false,
+    solvable: true,
+    solve: (ns, script, host, data) => {
+      return attemp(ns, script, host, data, parseIp(data as string));
+    },
   },
   "Algorithmic Stock Trader I": {
     solvable: false,
@@ -253,6 +249,35 @@ const types: Record<string, IContractDefinition<unknown>> = {
     solve: () => false,
   },
 };
+
+function isValidIp(ip: string) {
+  const splitted = ip.split(".").filter((value) => !!value);
+  if (splitted.length != 4) return false;
+
+  return !splitted.find(
+    (value) =>
+      ((Number.parseInt(value) != 0 || value.length > 1) &&
+        value.startsWith("0")) ||
+      Number.parseInt(value) > 255
+  );
+}
+
+function parseIp(ip: string): string[] {
+  const validIps = [];
+  for (let i = 1; i < 4; i++) {
+    for (let j = 1; j < 4; j++) {
+      for (let k = 1; k < 4; k++) {
+        const a1 = ip.substring(0, i);
+        const a2 = ip.substring(i, i + j);
+        const a3 = ip.substring(i + j, i + j + k);
+        const a4 = ip.substring(i + j + k, ip.length);
+        const candidate = `${a1}.${a2}.${a3}.${a4}`;
+        if (isValidIp(candidate)) validIps.push(candidate);
+      }
+    }
+  }
+  return validIps;
+}
 
 function primeFactor(integer: number) {
   for (let i = 2; i < Math.sqrt(integer) + 1; i++) {

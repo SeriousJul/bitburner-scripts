@@ -14,7 +14,7 @@ export async function main(ns: NS): Promise<void> {
 }
 
 export async function template(ns: NS) {
-  ns.codingcontract.createDummyContract("Find Largest Prime Factor");
+  ns.codingcontract.createDummyContract("Generate IP Addresses");
   ns.ls("home")
     .filter((file) => file.endsWith(".cct"))
     .forEach((contract) => {
