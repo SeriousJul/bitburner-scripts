@@ -5,7 +5,7 @@ import { defaultDepth } from "/lib/defaultDepth";
 import { hasFormulas, validateScriptInput } from "/lib/utilities";
 import { walkDeepFirst } from "/lib/walkDeepFirst";
 import { PSData, ps } from "/ps";
-import { upgradeall } from "/upgradeall";
+import { upgradeServers } from "./upgrade-servers";
 import { maxServers } from "/lib/maxServers";
 import { pwn } from "/pwn";
 import { killall } from "/killall";
@@ -52,7 +52,7 @@ export async function bot(ns: NS, { w, u, uh, ...flags }: typeof flagsTemplate) 
     /**
      * Upgrade
      */
-    if (u) await upgradeall(ns, { ...flags });
+    if (u) await upgradeServers(ns, { ...flags });
 
     if (uh) await upgradeHacknet(ns, { ...flags });
 

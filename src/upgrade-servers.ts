@@ -17,10 +17,10 @@ export async function main(ns: NS): Promise<void> {
 
   const { flags } = validationReport;
 
-  await upgradeall(ns, flags);
+  await upgradeServers(ns, flags);
 }
 
-export async function upgradeall(
+export async function upgradeServers(
   ns: NS,
   { b: budgetRatio, ...flags }: typeof flagsTemplate
 ) {

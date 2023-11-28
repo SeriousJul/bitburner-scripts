@@ -98,8 +98,19 @@ const types: Record<string, IContractDefinition<unknown>> = {
     },
   },
   "Total Ways to Sum II": {
-    solvable: false,
-    solve: () => false,
+    solvable: true,
+    solve: (ns, script, host, data) => {
+      return attemp(
+        ns,
+        script,
+        host,
+        data,
+        countComposeRestricted(
+          (data as any)[0] as number,
+          (data as any)[1] as number[]
+        )
+      );
+    },
   },
   "Spiralize Matrix": {
     solvable: false,
@@ -252,6 +263,17 @@ const types: Record<string, IContractDefinition<unknown>> = {
     solve: () => false,
   },
 };
+
+function countComposeRestricted(integer: number, dataset: number[]) {
+  const composition = new Array(integer + 1).fill(0);
+  composition[0] = 1;
+  for (let i = 0; i < dataset.length; i++) {
+    for (let j = dataset[i]; j <= integer; j++) {
+      composition[j] += composition[j - dataset[i]];
+    }
+  }
+  return composition[integer];
+}
 
 function countCompose(integer: number) {
   const composition = new Array(integer + 1).fill(0);
