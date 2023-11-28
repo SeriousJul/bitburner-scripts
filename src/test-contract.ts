@@ -13,7 +13,7 @@ export async function main(ns: NS): Promise<void> {
   await template(ns);
 }
 
-const contractType = "Unique Paths in a Grid II";
+const contractType = "Total Ways to Sum";
 export async function template(ns: NS) {
   if (
     !ns

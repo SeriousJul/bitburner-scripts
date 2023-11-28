@@ -92,8 +92,10 @@ const types: Record<string, IContractDefinition<unknown>> = {
     },
   },
   "Total Ways to Sum": {
-    solvable: false,
-    solve: () => false,
+    solvable: true,
+    solve: (ns, script, host, data) => {
+      return attemp(ns, script, host, data, countCompose(data as number));
+    },
   },
   "Total Ways to Sum II": {
     solvable: false,
@@ -250,6 +252,17 @@ const types: Record<string, IContractDefinition<unknown>> = {
     solve: () => false,
   },
 };
+
+function countCompose(integer: number) {
+  const composition = new Array(integer + 1).fill(0);
+  composition[0] = 1;
+  for (let i = 1; i < integer; i++) {
+    for (let j = i; j <= integer; j++) {
+      composition[j] = composition[j] + composition[j - i];
+    }
+  }
+  return composition[integer];
+}
 
 function isFinished(data: number[][], i: number, j: number) {
   return data.length === i + 1 && data[i].length === j + 1;
