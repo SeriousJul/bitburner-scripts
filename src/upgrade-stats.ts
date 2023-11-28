@@ -25,5 +25,5 @@ export async function template(
   { host }: typeof argsTemplate,
   { d: depth }: typeof flagsTemplate
 ) {
-  console.log("template");
+  ns.stock.getForecast()
 }

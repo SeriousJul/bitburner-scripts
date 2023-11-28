@@ -11,6 +11,7 @@ import { pwn } from "/pwn";
 import { killall } from "/killall";
 import { ThreadCounts } from "/lib/misc";
 import { upgradeHacknet } from "/upgrade-hacknet";
+import { manageGang } from "/gang";
 const argsTemplate = {};
 const flagsTemplate = {
   //use home in worker pool
@@ -23,6 +24,8 @@ const flagsTemplate = {
   u: false,
   //upgrade hacknet nodes
   uh: false,
+  //manage gang
+  g: false,
 };
 
 export async function main(ns: NS): Promise<void> {
@@ -42,7 +45,10 @@ const library = {
   specializedWeaken: "lib/specialized-weaken.js",
 };
 
-export async function bot(ns: NS, { w, u, uh, ...flags }: typeof flagsTemplate) {
+export async function bot(
+  ns: NS,
+  { w, u, uh, g, ...flags }: typeof flagsTemplate
+) {
   for (;;) {
     /**
      * Early game getting the 25 servers
@@ -55,6 +61,8 @@ export async function bot(ns: NS, { w, u, uh, ...flags }: typeof flagsTemplate) 
     if (u) await upgradeServers(ns, { ...flags });
 
     if (uh) await upgradeHacknet(ns, { ...flags });
+
+    if (g) await manageGang(ns, { ...flags });
 
     await pwn(ns, { d: defaultDepth, p: false, dl: false });
 

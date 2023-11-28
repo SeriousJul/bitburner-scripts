@@ -121,8 +121,10 @@ const types: Record<string, IContractDefinition<unknown>> = {
     solve: () => false,
   },
   "Array Jumping Game II": {
-    solvable: false,
-    solve: () => false,
+    solvable: true,
+    solve: (ns, script, host, data) => {
+      return attemp(ns, script, host, data, countJumps(data as number[]));
+    },
   },
   "Merge Overlapping Intervals": {
     solvable: false,
@@ -263,6 +265,29 @@ const types: Record<string, IContractDefinition<unknown>> = {
     solve: () => false,
   },
 };
+
+function countJumps(data: number[]) {
+  const n: number = data.length;
+  let reach = 0;
+  let jumps = 0;
+  let lastJump = -1;
+  while (reach < n - 1) {
+    let jumpedFrom = -1;
+    for (let i = reach; i > lastJump; i--) {
+      if (i + data[i] > reach) {
+        reach = i + data[i];
+        jumpedFrom = i;
+      }
+    }
+    if (jumpedFrom === -1) {
+      jumps = 0;
+      break;
+    }
+    lastJump = jumpedFrom;
+    jumps++;
+  }
+  return jumps;
+}
 
 function countComposeRestricted(integer: number, dataset: number[]) {
   const composition = new Array(integer + 1).fill(0);
