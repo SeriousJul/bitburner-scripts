@@ -180,8 +180,24 @@ const types: Record<string, IContractDefinition<unknown>> = {
     },
   },
   "Unique Paths in a Grid I": {
-    solvable: false,
-    solve: () => false,
+    solvable: true,
+    solve: (ns, script, host, data) => {
+      return attemp(
+        ns,
+        script,
+        host,
+        data,
+        walkDownFirst(
+          createAndFillTwoDArray(
+            (data as number[])[0],
+            (data as number[])[1],
+            () => 0
+          ),
+          0,
+          0
+        )
+      );
+    },
   },
   "Unique Paths in a Grid II": {
     solvable: true,
@@ -265,6 +281,16 @@ const types: Record<string, IContractDefinition<unknown>> = {
     solve: () => false,
   },
 };
+
+function createAndFillTwoDArray<T>(
+  rows: number,
+  cols: number,
+  valueProvider: () => T
+) {
+  return Array.from({ length: rows }, () =>
+    Array.from({ length: cols }, valueProvider)
+  );
+}
 
 function countJumps(data: number[]) {
   const n: number = data.length;
