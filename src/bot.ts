@@ -66,72 +66,73 @@ export async function bot(
 
     await pwn(ns, { d: defaultDepth, p: false, dl: false });
 
-    await walkAllHackableServer(ns, async (data) => {
-      if (!data.weaken.inProgress && data.weaken.shouldPerform(data)) {
-        const weakenThreadsCounts = weakenThreads(ns, data);
-        return await deployall(
-          ns,
-          { script: library.specializedWeaken, target: data.server.hostname },
-          {
-            d: defaultDepth,
-            w,
-            x: weakenThreadsCounts.threads,
-            xh: weakenThreadsCounts.homeThreads,
-          }
-        );
-      }
-      return true;
-    });
-
-    await walkAllHackableServer(ns, async (data) => {
-      if (!data.grow.inProgress && data.grow.shouldPerform(data)) {
-        const growThreadsCounts = growThreads(ns, data);
-        return await deployall(
-          ns,
-          { script: library.specializedGrow, target: data.server.hostname },
-          {
-            d: defaultDepth,
-            w,
-            x: growThreadsCounts.threads,
-            xh: growThreadsCounts.homeThreads,
-          }
-        );
-      }
-      return true;
-    });
-
-    await walkAllHackableServer(ns, async (data) => {
-      if (!data.hack.inProgress && data.hack.shouldPerform(data)) {
-        const hackThreadsCounts = hackThreads(ns, data);
-        //For some reason, it return -1 in some case, I need to understand those
-        if (hackThreadsCounts.threads >= 0) {
-          // await ns.sleep(1);
+    await walkAllHackableServer(
+      ns,
+      async (data) => {
+        if (!data.weaken.inProgress && data.weaken.shouldPerform(data)) {
+          const weakenThreadsCounts = weakenThreads(ns, data);
           return await deployall(
             ns,
-            { script: library.specializedHack, target: data.server.hostname },
+            { script: library.specializedWeaken, target: data.server.hostname },
             {
               d: defaultDepth,
               w,
-              x: hackThreadsCounts.threads,
-              xh: hackThreadsCounts.homeThreads,
+              x: weakenThreadsCounts.threads,
+              xh: weakenThreadsCounts.homeThreads,
             }
           );
-        } else {
-          //Print all kill all workers
-          ns.tprint(
-            ns.sprintf(
-              "Could not hackAnalyse %s: %s %s",
-              data.server.hostname,
-              hackThreads,
-              JSON.stringify(data.server)
-            )
-          );
-          killall(ns, { d: defaultDepth });
-          ns.exit();
         }
+        return true;
+      },
+      async (data) => {
+        if (!data.grow.inProgress && data.grow.shouldPerform(data)) {
+          const growThreadsCounts = growThreads(ns, data);
+          return await deployall(
+            ns,
+            { script: library.specializedGrow, target: data.server.hostname },
+            {
+              d: defaultDepth,
+              w,
+              x: growThreadsCounts.threads,
+              xh: growThreadsCounts.homeThreads,
+            }
+          );
+        }
+        return true;
+      },
+      async (data) => {
+        if (!data.hack.inProgress && data.hack.shouldPerform(data)) {
+          const hackThreadsCounts = hackThreads(ns, data);
+          //For some reason, it return -1 in some case, I need to understand those
+          if (hackThreadsCounts.threads >= 0) {
+            // await ns.sleep(1);
+            return await deployall(
+              ns,
+              { script: library.specializedHack, target: data.server.hostname },
+              {
+                d: defaultDepth,
+                w,
+                x: hackThreadsCounts.threads,
+                xh: hackThreadsCounts.homeThreads,
+              }
+            );
+          } else {
+            //Print all kill all workers
+            ns.tprint(
+              ns.sprintf(
+                "Could not hackAnalyse %s: %s %s",
+                data.server.hostname,
+                hackThreads,
+                JSON.stringify(data.server)
+              )
+            );
+            killall(ns, { d: defaultDepth });
+            ns.exit();
+          }
+        }
+        return true;
       }
-      return true;
-    });
+    );
 
     if (flags.p && !(await ns.prompt("Continue?", { type: "boolean" }))) {
       ns.exit();
@@ -164,9 +165,9 @@ interface WalkCallbackData {
 
 async function walkAllHackableServer(
   ns: NS,
-  callback: (data: WalkCallbackData) => Promise<boolean>
+  ...callbacks: ((data: WalkCallbackData) => Promise<boolean>)[]
 ) {
-  const servers = await allHackableServersSorted(ns, "money-asc");
+  const servers = await allHackableServersSorted(ns, "money-desc");
   let shouldContinue = true;
   while (servers.length) {
     const server = servers.pop();
@@ -178,34 +179,39 @@ async function walkAllHackableServer(
       (process) => process.args?.[0] === hostname
     );
 
-    shouldContinue = await callback({
-      server,
-      processes,
-      weaken: {
-        inProgress: !!processes.find(
-          (process) => process.filename === library.specializedWeaken
-        ),
-        serverMinSecurity: ns.getServerMinSecurityLevel(hostname),
-        serverSecurity: ns.getServerSecurityLevel(hostname),
-        shouldPerform: (data) =>
-          data.weaken.serverSecurity > data.weaken.serverMinSecurity,
-      },
-      grow: {
-        inProgress: !!processes.find(
-          (process) => process.filename === library.specializedGrow
-        ),
-        maxMoney: ns.getServerMaxMoney(hostname),
-        money: ns.getServerMoneyAvailable(hostname),
-        shouldPerform: (data) => data.grow.money < data.grow.maxMoney,
-      },
-      hack: {
-        inProgress: !!processes.find(
-          (process) => process.filename === library.specializedHack
-        ),
-        hackChance: ns.hackAnalyzeChance(hostname),
-        shouldPerform: (data) => !!data.grow.money && data.hack.hackChance > 0,
-      },
-    });
+    for (const callback of callbacks) {
+      shouldContinue = await callback({
+        server,
+        processes,
+        weaken: {
+          inProgress: !!processes.find(
+            (process) => process.filename === library.specializedWeaken
+          ),
+          serverMinSecurity: ns.getServerMinSecurityLevel(hostname),
+          serverSecurity: ns.getServerSecurityLevel(hostname),
+          shouldPerform: (data) =>
+            data.weaken.serverSecurity > data.weaken.serverMinSecurity,
+        },
+        grow: {
+          inProgress: !!processes.find(
+            (process) => process.filename === library.specializedGrow
+          ),
+          maxMoney: ns.getServerMaxMoney(hostname),
+          money: ns.getServerMoneyAvailable(hostname),
+          shouldPerform: (data) => data.grow.money < data.grow.maxMoney,
+        },
+        hack: {
+          inProgress: !!processes.find(
+            (process) => process.filename === library.specializedHack
+          ),
+          hackChance: ns.hackAnalyzeChance(hostname),
+          shouldPerform: (data) =>
+            !!data.grow.money && data.hack.hackChance > 0,
+        },
+      });
+
+      if (!shouldContinue) break;
+    }
   }
 }
 
