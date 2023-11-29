@@ -39,14 +39,14 @@ export async function manageGang(ns: NS, { b }: typeof flagsTemplate) {
       ns.gang.setMemberTask(gangMember.name, "Train Hacking");
     } else if (gangMember.cha_exp < 2000) {
       ns.gang.setMemberTask(gangMember.name, "Train Charisma");
-    } else if (
-      gangMember.task === "Vigilante Justice" &&
-      wantedPenalty < 0.98 &&
-      gangInfo.wantedLevel > 50
-    ) {
-      continue;
-    } else if (wantedPenalty < 0.8 && gangInfo.wantedLevel > 100) {
-      ns.gang.setMemberTask(gangMember.name, "Vigilante Justice");
+      // } else if (
+      //   gangMember.task === "Vigilante Justice" &&
+      //   wantedPenalty < 0.98 &&
+      //   gangInfo.wantedLevel > 50
+      // ) {
+      //   continue;
+      // } else if (wantedPenalty < 0.8 && gangInfo.wantedLevel > 100) {
+      //   ns.gang.setMemberTask(gangMember.name, "Vigilante Justice");
     } else {
       const mostProfitTask = ns.gang
         .getTaskNames()
@@ -72,7 +72,7 @@ export async function manageGang(ns: NS, { b }: typeof flagsTemplate) {
         .find(() => true)?.name;
       ns.gang.setMemberTask(
         gangMember.name,
-        mostProfitTask || mostRespectTask || "Mug People"
+        "Territory Warfare" || mostProfitTask || mostRespectTask || "Mug People"
       );
     }
   }
