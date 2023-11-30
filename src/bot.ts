@@ -62,7 +62,7 @@ export async function bot(
 
     if (uh) await upgradeHacknet(ns, { ...flags });
 
-    if (g) await manageGang(ns, { ...flags });
+    // if (g) await manageGang(ns, { ...flags });
 
     await pwn(ns, { d: defaultDepth, p: false, dl: false });
 
