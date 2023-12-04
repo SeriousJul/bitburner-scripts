@@ -117,8 +117,17 @@ const types: Record<string, IContractDefinition<unknown>> = {
     solve: () => false,
   },
   "Array Jumping Game": {
-    solvable: false,
-    solve: () => false,
+    solvable: true,
+    solve: (ns, script, host, _data) => {
+      const data = _data as number[];
+      const n: number = data.length;
+      let i = 0;
+      for (let reach = 0; i < n && i <= reach; ++i) {
+        reach = Math.max(i + data[i], reach);
+      }
+      const solution: boolean = i === n;
+      return attemp(ns, script, host, data, solution ? "1" : "0");
+    },
   },
   "Array Jumping Game II": {
     solvable: true,
@@ -127,8 +136,10 @@ const types: Record<string, IContractDefinition<unknown>> = {
     },
   },
   "Merge Overlapping Intervals": {
-    solvable: false,
-    solve: () => false,
+    solvable: true,
+    solve: (ns, script, host, data) => {
+      return attemp(ns, script, host, data, mergeIntervals(data as number[][]));
+    },
   },
   "Generate IP Addresses": {
     solvable: true,
@@ -164,8 +175,46 @@ const types: Record<string, IContractDefinition<unknown>> = {
     },
   },
   "Algorithmic Stock Trader IV": {
-    solvable: false,
-    solve: () => false,
+    solvable: true,
+    solve: (ns, script, host, _data) => {
+      const data = _data as [number, number[]];
+      const k: number = data[0];
+      const prices: number[] = data[1];
+
+      function maxProfit(k: number, prices: number[]) {
+        const len = prices.length;
+        if (k > len / 2) {
+          let res = 0;
+          for (let i = 1; i < len; ++i) {
+            res += Math.max(prices[i] - prices[i - 1], 0);
+          }
+
+          return res;
+        }
+
+        const hold: number[] = [];
+        const rele: number[] = [];
+        hold.length = k + 1;
+        rele.length = k + 1;
+        for (let i = 0; i <= k; ++i) {
+          hold[i] = Number.MIN_SAFE_INTEGER;
+          rele[i] = 0;
+        }
+
+        let cur: number;
+        for (let i = 0; i < len; ++i) {
+          cur = prices[i];
+          for (let j = k; j > 0; --j) {
+            rele[j] = Math.max(rele[j], hold[j] + cur);
+            hold[j] = Math.max(hold[j], rele[j - 1] - cur);
+          }
+        }
+
+        return rele[k];
+      }
+
+      return attemp(ns, script, host, data, maxProfit(k, prices));
+    },
   },
   "Minimum Path Sum in a Triangle": {
     solvable: true,
@@ -228,8 +277,20 @@ const types: Record<string, IContractDefinition<unknown>> = {
     },
   },
   "Find All Valid Math Expressions": {
-    solvable: false,
-    solve: () => false,
+    solvable: true,
+    solve: (ns, script, host, _data) => {
+      const data = _data as [string, number];
+      const num = data[0];
+      const target = data[1];
+
+      return attemp(
+        ns,
+        script,
+        host,
+        data,
+        findMathExpressions("", num, target, 0, 0, 0)
+      );
+    },
   },
   "HammingCodes: Integer to Encoded Binary": {
     solvable: true,
@@ -238,8 +299,10 @@ const types: Record<string, IContractDefinition<unknown>> = {
     },
   },
   "HammingCodes: Encoded Binary to Integer": {
-    solvable: false,
-    solve: () => false,
+    solvable: true,
+    solve: (ns, script, host, data) => {
+      return attemp(ns, script, host, data, HammingDecode(data as string));
+    },
   },
   "Proper 2-Coloring of a Graph": {
     solvable: true,
@@ -262,12 +325,16 @@ const types: Record<string, IContractDefinition<unknown>> = {
     solve: () => false,
   },
   "Compression II: LZ Decompression": {
-    solvable: false,
-    solve: () => false,
+    solvable: true,
+    solve: (ns, script, host, data) => {
+      return attemp(ns, script, host, data, comprLZDecode(data as string)!);
+    },
   },
   "Compression III: LZ Compression": {
-    solvable: false,
-    solve: () => false,
+    solvable: true,
+    solve: (ns, script, host, data) => {
+      return attemp(ns, script, host, data, comprLZEncode(data as string)!);
+    },
   },
   "Encryption I: Caesar Cipher": {
     solvable: true,
@@ -277,10 +344,303 @@ const types: Record<string, IContractDefinition<unknown>> = {
     },
   },
   "Encryption II: Vigenère Cipher": {
-    solvable: false,
-    solve: () => false,
+    solvable: true,
+    solve: (ns, script, host, data) => {
+      const [text, keyword] = <[string, string]>data;
+      return attemp(ns, script, host, data, VigenereCipher(text, keyword));
+    },
   },
 };
+
+// compress plaintest string
+export function comprLZEncode(plain: string): string {
+  // for state[i][j]:
+  //      if i is 0, we're adding a literal of length j
+  //      else, we're adding a backreference of offset i and length j
+  let cur_state: (string | null)[][] = Array.from(Array(10), () =>
+    Array(10).fill(null)
+  );
+  let new_state: (string | null)[][] = Array.from(Array(10), () => Array(10));
+
+  function set(
+    state: (string | null)[][],
+    i: number,
+    j: number,
+    str: string
+  ): void {
+    const current = state[i][j];
+    if (current == null || str.length < current.length) {
+      state[i][j] = str;
+    } else if (str.length === current.length && Math.random() < 0.5) {
+      // if two strings are the same length, pick randomly so that
+      // we generate more possible inputs to Compression II
+      state[i][j] = str;
+    }
+  }
+
+  // initial state is a literal of length 1
+  cur_state[0][1] = "";
+
+  for (let i = 1; i < plain.length; ++i) {
+    for (const row of new_state) {
+      row.fill(null);
+    }
+    const c = plain[i];
+
+    // handle literals
+    for (let length = 1; length <= 9; ++length) {
+      const string = cur_state[0][length];
+      if (string == null) {
+        continue;
+      }
+
+      if (length < 9) {
+        // extend current literal
+        set(new_state, 0, length + 1, string);
+      } else {
+        // start new literal
+        set(new_state, 0, 1, string + "9" + plain.substring(i - 9, i) + "0");
+      }
+
+      for (let offset = 1; offset <= Math.min(9, i); ++offset) {
+        if (plain[i - offset] === c) {
+          // start new backreference
+          set(
+            new_state,
+            offset,
+            1,
+            string + String(length) + plain.substring(i - length, i)
+          );
+        }
+      }
+    }
+
+    // handle backreferences
+    for (let offset = 1; offset <= 9; ++offset) {
+      for (let length = 1; length <= 9; ++length) {
+        const string = cur_state[offset][length];
+        if (string == null) {
+          continue;
+        }
+
+        if (plain[i - offset] === c) {
+          if (length < 9) {
+            // extend current backreference
+            set(new_state, offset, length + 1, string);
+          } else {
+            // start new backreference
+            set(new_state, offset, 1, string + "9" + String(offset) + "0");
+          }
+        }
+
+        // start new literal
+        set(new_state, 0, 1, string + String(length) + String(offset));
+
+        // end current backreference and start new backreference
+        for (let new_offset = 1; new_offset <= Math.min(9, i); ++new_offset) {
+          if (plain[i - new_offset] === c) {
+            set(
+              new_state,
+              new_offset,
+              1,
+              string + String(length) + String(offset) + "0"
+            );
+          }
+        }
+      }
+    }
+
+    const tmp_state = new_state;
+    new_state = cur_state;
+    cur_state = tmp_state;
+  }
+
+  let result = null;
+
+  for (let len = 1; len <= 9; ++len) {
+    let string = cur_state[0][len];
+    if (string == null) {
+      continue;
+    }
+
+    string += String(len) + plain.substring(plain.length - len, plain.length);
+    if (result == null || string.length < result.length) {
+      result = string;
+    } else if (string.length == result.length && Math.random() < 0.5) {
+      result = string;
+    }
+  }
+
+  for (let offset = 1; offset <= 9; ++offset) {
+    for (let len = 1; len <= 9; ++len) {
+      let string = cur_state[offset][len];
+      if (string == null) {
+        continue;
+      }
+
+      string += String(len) + "" + String(offset);
+      if (result == null || string.length < result.length) {
+        result = string;
+      } else if (string.length == result.length && Math.random() < 0.5) {
+        result = string;
+      }
+    }
+  }
+
+  return result ?? "";
+}
+
+// decompress LZ-compressed string, or return null if input is invalid
+export function comprLZDecode(compr: string): string | null {
+  let plain = "";
+
+  for (let i = 0; i < compr.length; ) {
+    const literal_length = compr.charCodeAt(i) - 0x30;
+
+    if (
+      literal_length < 0 ||
+      literal_length > 9 ||
+      i + 1 + literal_length > compr.length
+    ) {
+      return null;
+    }
+
+    plain += compr.substring(i + 1, i + 1 + literal_length);
+    i += 1 + literal_length;
+
+    if (i >= compr.length) {
+      break;
+    }
+    const backref_length = compr.charCodeAt(i) - 0x30;
+
+    if (backref_length < 0 || backref_length > 9) {
+      return null;
+    } else if (backref_length === 0) {
+      ++i;
+    } else {
+      if (i + 1 >= compr.length) {
+        return null;
+      }
+
+      const backref_offset = compr.charCodeAt(i + 1) - 0x30;
+      if (
+        (backref_length > 0 && (backref_offset < 1 || backref_offset > 9)) ||
+        backref_offset > plain.length
+      ) {
+        return null;
+      }
+
+      for (let j = 0; j < backref_length; ++j) {
+        plain += plain[plain.length - backref_offset];
+      }
+
+      i += 2;
+    }
+  }
+
+  return plain;
+}
+
+function findMathExpressions(
+  path: string,
+  num: string,
+  target: number,
+  pos: number,
+  evaluated: number,
+  multed: number
+): string[] {
+  const result: string[] = [];
+  if (pos === num.length) {
+    if (target === evaluated) {
+      result.push(path);
+    }
+    return result;
+  }
+
+  for (let i = pos; i < num.length; ++i) {
+    if (i != pos && num[pos] == "0") {
+      break;
+    }
+    const cur = parseInt(num.substring(pos, i + 1));
+
+    if (pos === 0) {
+      result.push(
+        ...findMathExpressions(path + cur, num, target, i + 1, cur, cur)
+      );
+    } else {
+      result.push(
+        ...findMathExpressions(
+          path + "+" + cur,
+          num,
+          target,
+          i + 1,
+          evaluated + cur,
+          cur
+        )
+      );
+      result.push(
+        ...findMathExpressions(
+          path + "-" + cur,
+          num,
+          target,
+          i + 1,
+          evaluated - cur,
+          -cur
+        )
+      );
+      result.push(
+        ...findMathExpressions(
+          path + "*" + cur,
+          num,
+          target,
+          i + 1,
+          evaluated - multed + multed * cur,
+          multed * cur
+        )
+      );
+    }
+  }
+  return result;
+}
+
+function VigenereCipher(text: string, keyword: string) {
+  const cipher = [...text]
+    .map((a, i) => {
+      return a === " "
+        ? a
+        : String.fromCharCode(
+            ((a.charCodeAt(0) -
+              2 * 65 +
+              keyword.charCodeAt(i % keyword.length)) %
+              26) +
+              65
+          );
+    })
+    .join("");
+  return cipher;
+}
+
+function mergeIntervals(data: number[][]) {
+  const intervals: number[][] = [...data];
+  intervals.sort((a: number[], b: number[]) => {
+    return a[0] - b[0];
+  });
+
+  const result: number[][] = [];
+  let start: number = intervals[0][0];
+  let end: number = intervals[0][1];
+  for (const interval of intervals) {
+    if (interval[0] <= end) {
+      end = Math.max(end, interval[1]);
+    } else {
+      result.push([start, end]);
+      start = interval[0];
+      end = interval[1];
+    }
+  }
+  result.push([start, end]);
+  return result;
+}
 
 function createAndFillTwoDArray<T>(
   rows: number,

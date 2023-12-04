@@ -1,17 +1,12 @@
 import { NS, Server } from "@ns";
-import { buy } from "/buy";
 import { deployall } from "/deployall";
+import { killall } from "/killall";
 import { defaultDepth } from "/lib/defaultDepth";
+import { ThreadCounts } from "/lib/misc";
 import { hasFormulas, validateScriptInput } from "/lib/utilities";
 import { walkDeepFirst } from "/lib/walkDeepFirst";
 import { PSData, ps } from "/ps";
-import { upgradeServers } from "./upgrade-servers";
-import { maxServers } from "/lib/maxServers";
 import { pwn } from "/pwn";
-import { killall } from "/killall";
-import { ThreadCounts } from "/lib/misc";
-import { upgradeHacknet } from "/upgrade-hacknet";
-import { manageGang } from "/gang";
 const argsTemplate = {};
 const flagsTemplate = {
   //use home in worker pool
@@ -20,12 +15,6 @@ const flagsTemplate = {
   b: 0.1,
   //prompt
   p: false,
-  //upgrade nodes
-  u: false,
-  //upgrade hacknet nodes
-  uh: false,
-  //manage gang
-  g: false,
 };
 
 export async function main(ns: NS): Promise<void> {
@@ -45,25 +34,8 @@ const library = {
   specializedWeaken: "lib/specialized-weaken.js",
 };
 
-export async function bot(
-  ns: NS,
-  { w, u, uh, g, ...flags }: typeof flagsTemplate
-) {
+export async function bot(ns: NS, { w, ...flags }: typeof flagsTemplate) {
   for (;;) {
-    /**
-     * Early game getting the 25 servers
-     */
-    await buy(ns, { pool: maxServers, "min-ram": 2, ram: 2 });
-
-    /**
-     * Upgrade
-     */
-    if (u) await upgradeServers(ns, { ...flags });
-
-    if (uh) await upgradeHacknet(ns, { ...flags });
-
-    // if (g) await manageGang(ns, { ...flags });
-
     await pwn(ns, { d: defaultDepth, p: false, dl: false });
 
     await walkAllHackableServer(
@@ -241,10 +213,10 @@ async function allHackableServersSorted(
 function hackThreads(ns: NS, data: WalkCallbackData): ThreadCounts {
   return new ThreadCounts(
     Math.ceil(
-      ns.hackAnalyzeThreads(data.server.hostname, data.grow.money * 0.4)
+      ns.hackAnalyzeThreads(data.server.hostname, data.grow.money * 0.6)
     ),
     Math.ceil(
-      ns.hackAnalyzeThreads(data.server.hostname, data.grow.money * 0.4)
+      ns.hackAnalyzeThreads(data.server.hostname, data.grow.money * 0.6)
     )
   );
 }
