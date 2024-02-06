@@ -5,6 +5,8 @@ const argsTemplate = {};
 const flagsTemplate = {
   //budget in percentage of owning money
   b: 0.1,
+  //ascension factor
+  a: 1.1,
 };
 
 export async function main(ns: NS): Promise<void> {
@@ -18,7 +20,7 @@ export async function main(ns: NS): Promise<void> {
   await manageGang(ns, flags);
 }
 
-export async function manageGang(ns: NS, { b }: typeof flagsTemplate) {
+export async function manageGang(ns: NS, { b, a }: typeof flagsTemplate) {
   // let budget = ns.getPlayer().money * budgetRatio;
   if (ns.gang.canRecruitMember()) {
     ns.gang.recruitMember(`guy-${ns.gang.getMemberNames().length}`);
@@ -39,6 +41,13 @@ export async function manageGang(ns: NS, { b }: typeof flagsTemplate) {
       ns.gang.setMemberTask(gangMember.name, "Train Hacking");
     } else if (gangMember.cha_exp < 2000) {
       ns.gang.setMemberTask(gangMember.name, "Train Charisma");
+    } else if (
+      gangMember.agi_mult * a < gangMember.agi_asc_mult ||
+      gangMember.def_mult * a < gangMember.def_asc_mult ||
+      gangMember.str_mult * a < gangMember.str_asc_mult ||
+      gangMember.dex_mult * a < gangMember.dex_asc_mult
+    ) {
+      ns.gang.ascendMember(gangMember.name);
       // } else if (
       //   gangMember.task === "Vigilante Justice" &&
       //   wantedPenalty < 0.98 &&
@@ -72,7 +81,7 @@ export async function manageGang(ns: NS, { b }: typeof flagsTemplate) {
         .find(() => true)?.name;
       ns.gang.setMemberTask(
         gangMember.name,
-        "Territory Warfare" || mostProfitTask || mostRespectTask || "Mug People"
+        mostProfitTask || mostRespectTask || "Territory Warfare" || "Mug People"
       );
     }
   }

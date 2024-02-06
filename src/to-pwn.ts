@@ -1,8 +1,7 @@
 import { NS, Server } from "@ns";
 import { defaultDepth } from "/lib/defaultDepth";
-import { newLine } from "/lib/misc";
 import { validateScriptInput } from "/lib/utilities";
-import { IAccumulatorData, walkDeepFirst } from "/lib/walkDeepFirst";
+import { walkDeepFirst } from "/lib/walkDeepFirst";
 const argsTemplate = {};
 const flagsTemplate = {
   //depth
@@ -45,17 +44,34 @@ export async function toPwn(ns: NS, { d: depth }: typeof flagsTemplate) {
     },
     { excludes: ns.getPurchasedServers() }
   );
-  serversToPwn
-    .sort(({ server: serverA }, { server: serverB }) => {
-      return (
-        (serverB.requiredHackingSkill || 0) -
-        (serverA.requiredHackingSkill || 0)
-      );
-    })
-    .forEach((server) => {
-      ns.tprintf(generateConnect(server.nodes, server.server.hostname));
+  serversToPwn.sort(({ server: serverA }, { server: serverB }) => {
+    return (
+      (serverB.requiredHackingSkill || 0) - (serverA.requiredHackingSkill || 0)
+    );
+  });
 
-    });
+  for (const { nodes, server } of serversToPwn) {
+    ns.tprintf(generateConnect(nodes, server.hostname));
+    if (
+      server.hasAdminRights &&
+      !server.backdoorInstalled &&
+      server.requiredHackingSkill &&
+      ns.getHackingLevel() > server.requiredHackingSkill
+    ) {
+      for (const node of nodes) {
+        ns.singularity.connect(node);
+      }
+      ns.singularity.connect(server.hostname);
+      ns.tprintf("Installing backdoor... " + ns.singularity.getCurrentServer());
+      await ns.singularity.installBackdoor();
+      ns.tprintf("Installed backdoor... " + ns.singularity.getCurrentServer());
+      for (const node of nodes.reverse()) {
+        ns.singularity.connect(node);
+      }
+      ns.singularity.connect("home");
+      ns.tprintf("Back home... " + ns.singularity.getCurrentServer());
+    }
+  }
 }
 export function generateConnect(nodes: string[], host: string): string {
   return (
