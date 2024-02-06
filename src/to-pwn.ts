@@ -50,7 +50,7 @@ export async function toPwn(ns: NS, { d: depth }: typeof flagsTemplate) {
     );
   });
 
-  for (const { nodes, server } of serversToPwn) {
+  for (const { nodes, server } of serversToPwn.reverse()) {
     ns.tprintf(generateConnect(nodes, server.hostname));
     if (
       server.hasAdminRights &&

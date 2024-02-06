@@ -15,5 +15,4 @@ export async function main(ns: NS): Promise<void> {
 
 export async function template(ns: NS) {
     ns.tprint("Your karma is: " + (ns as any).heart.break())
-  ns.corporation.
 }

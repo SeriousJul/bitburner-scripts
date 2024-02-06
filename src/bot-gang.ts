@@ -5,6 +5,8 @@ const argsTemplate = {};
 const flagsTemplate = {
   //budget in percentage of owning money
   b: 0.1,
+  //ascension factor
+  a: 1.1,
   //prompt
   p: false,
 };

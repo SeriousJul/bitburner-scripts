@@ -21,6 +21,10 @@ export async function main(ns: NS): Promise<void> {
 }
 
 export async function manageGang(ns: NS, { b, a }: typeof flagsTemplate) {
+  if (!ns.gang.inGang()) {
+    return;
+  }
+  
   // let budget = ns.getPlayer().money * budgetRatio;
   if (ns.gang.canRecruitMember()) {
     ns.gang.recruitMember(`guy-${ns.gang.getMemberNames().length}`);
