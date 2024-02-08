@@ -13,7 +13,7 @@
     "noImplicitReturns": true,
     "noImplicitThis": true,
     "esModuleInterop": true,
-    "inlineSourceMap": true,
+    "sourceMap": false,
     "strict": true,
     "rootDir": "src/",
     "outDir": "dist/",

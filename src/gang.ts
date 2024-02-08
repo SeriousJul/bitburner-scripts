@@ -34,6 +34,7 @@ export async function manageGang(ns: NS, { b, a }: typeof flagsTemplate) {
   const { wantedPenalty } = gangInfo;
 
   for (const gangMember of getGangMembers(ns)) {
+    const ascensionResult = ns.gang.getAscensionResult(gangMember.name);
     if (
       gangMember.agi_exp < 2000 ||
       gangMember.def_exp < 2000 ||
@@ -46,10 +47,11 @@ export async function manageGang(ns: NS, { b, a }: typeof flagsTemplate) {
     } else if (gangMember.cha_exp < 2000) {
       ns.gang.setMemberTask(gangMember.name, "Train Charisma");
     } else if (
-      gangMember.agi_mult * a < gangMember.agi_asc_mult ||
-      gangMember.def_mult * a < gangMember.def_asc_mult ||
-      gangMember.str_mult * a < gangMember.str_asc_mult ||
-      gangMember.dex_mult * a < gangMember.dex_asc_mult
+      ascensionResult && 
+      (gangMember.agi_asc_mult * a < ascensionResult.agi ||
+      gangMember.def_asc_mult * a < ascensionResult.def ||
+      gangMember.str_asc_mult * a < ascensionResult.str ||
+      gangMember.dex_asc_mult * a < ascensionResult.dex)
     ) {
       ns.gang.ascendMember(gangMember.name);
       // } else if (
